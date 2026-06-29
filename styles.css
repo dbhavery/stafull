@@ -349,7 +349,7 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:rgba(255,255,2
 .mq::after{right:0;background:linear-gradient(270deg,#0b0b0d,transparent)}
 .mq-track{display:flex;align-items:center;width:max-content;padding:17px 0;will-change:transform;backface-visibility:hidden;animation:mq-scroll 60s linear infinite}
 .mq:hover .mq-track{animation-play-state:paused}
-.mq-item{display:inline-flex;align-items:center;gap:9px;padding:0 26px;font-family:var(--mono);font-size:.86rem;letter-spacing:.01em;color:var(--fg-2);white-space:nowrap}
+.mq-item{display:inline-flex;align-items:center;gap:9px;padding:0 18px;font-family:var(--mono);font-size:.86rem;letter-spacing:.01em;color:var(--fg-2);white-space:nowrap}
 .mq-item b{color:var(--fg);font-weight:700}
 .mq-mut{color:var(--fg-3)}
 .mq-fd{width:9px;height:9px;border-radius:2px;background:var(--fg-3);flex:none}
