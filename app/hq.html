@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HQ Command Center — StaFull</title>
+<meta name="description" content="StaFull HQ command center demo — network performance, franchises, royalties and compliance across the holding company.">
+<meta name="theme-color" content="#08080a">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="../mapkit.css">
+<style>
+  .note { font-size: .82rem; color: var(--fg-2); line-height: 1.55; }
+  .note b { color: var(--fg); font-weight: 600; }
+  .tbl tfoot td, .tbl tr.tot td { border-top: 1px solid var(--line-2); border-bottom: 0;
+    color: var(--fg); font-weight: 700; }
+  .tbl tr.tot td.num, .tbl tr.tot td .mono { color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="app-side" id="app-side"></aside>
+  <div class="app-main">
+    <header class="app-top" id="app-top"></header>
+    <div class="app-content">
+
+      <!-- NETWORK -->
+      <section class="view" id="view-network" data-title="Network">
+        <div class="kpis" id="net-kpis"></div>
+        <div class="panel">
+          <div class="panel-head"><h3>Franchises at a glance</h3><span class="ph-sub" id="net-sub">—</span></div>
+          <div class="panel-body flush"><div class="rows" id="net-rows" style="padding:0 18px"></div></div>
+        </div>
+        <div class="cols cols-2-1" style="margin-top:18px">
+          <div class="panel">
+            <div class="panel-head"><h3>Network footprint</h3><span class="ph-sub">Texas · 4 markets</span></div>
+            <div class="panel-body">
+              <div id="net-map" class="sf-map" style="height:420px"></div>
+              <div class="map-legend" id="net-legend"></div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Network at a glance</h3></div>
+            <div class="panel-body" id="net-stats"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FRANCHISES -->
+      <section class="view" id="view-franchises" data-title="Franchises">
+        <div class="view-head"><h2>Franchises</h2><p>Every franchise in the network, its owner and region, and the operating figures HQ watches — customers, fleet, monthly recurring revenue, royalties and compliance.</p></div>
+        <div class="panel"><div class="panel-body flush"><table class="tbl" id="fr-tbl"></table></div></div>
+      </section>
+
+      <!-- FINANCE -->
+      <section class="view" id="view-finance" data-title="Finance & Royalties">
+        <div class="view-head"><h2>Finance &amp; royalties</h2><p>What the network earns and what flows up to HQ. Each franchise pays a 6% royalty, a 1% brand fee, and a $600 per-truck monthly technology lease.</p></div>
+        <div class="kpis" id="fin-kpis"></div>
+        <div class="panel">
+          <div class="panel-head"><h3>Royalties by franchise · month-to-date</h3></div>
+          <div class="panel-body flush"><table class="tbl" id="fin-tbl"></table></div>
+        </div>
+        <div class="panel" style="margin-top:18px">
+          <div class="panel-head"><h3>How franchise economics work</h3></div>
+          <div class="panel-body">
+            <p class="note">Franchisees run their own trucks, drivers and customer book; HQ provides the brand, the dispatch &amp; verification platform, and national supply agreements. In return each location remits a <b>6% royalty</b> on revenue, a <b>1% brand-fund fee</b> that pays for national marketing, and a <b>$600 per-truck monthly technology lease</b> covering the tankers' telemetry, the AI fuel-type verification, and the customer apps. The <b>Total to HQ</b> column is the sum of those three lines — the recurring, asset-light revenue the holding company collects across the network.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- COMPLIANCE -->
+      <section class="view" id="view-compliance" data-title="Compliance">
+        <div class="view-head"><h2>Compliance</h2><p>Network reliability and safety at a glance — platform uptime, the compliance score HQ holds every franchise to, and the open alerts the AI verification layer has raised tonight.</p></div>
+        <div class="kpis" id="comp-kpis" style="grid-template-columns:repeat(3,1fr)"></div>
+        <div class="cols cols-2-1">
+          <div class="panel">
+            <div class="panel-head"><h3>Open alerts</h3><span class="ph-sub" id="comp-alert-sub">—</span></div>
+            <div class="panel-body flush" id="comp-alerts"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Compliance by franchise</h3></div>
+            <div class="panel-body" id="comp-scores"></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:18px">
+          <div class="panel-head"><h3>Franchise-sales pipeline</h3><span class="ph-sub">New territories</span></div>
+          <div class="panel-body flush"><table class="tbl" id="comp-pipe"></table></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../mapkit.js"></script>
+<script src="mode.js"></script>
+<script src="seed.js"></script>
+<script src="store.js"></script>
+<script src="ui.js"></script>
+<script>
+(function () {
+  var S = window.StaFullStore;
+  var SEED = window.STAFULL_SEED;
+  var app = StaFullApp.mount({ role: 'hq', active: 'network' });
+  var I = StaFullApp.icons;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function money(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function money0(n) { return '$' + Math.round(Number(n)).toLocaleString('en-US'); }
+  function num0(n) { return Math.round(Number(n)).toLocaleString('en-US'); }
+  function pct1(n) { return (Math.round(n * 1000) / 10).toFixed(1) + '%'; }
+
+  function kpi(icon, val, label, sub, red) {
+    return '<div class="kpi"><div class="k-label"><span class="ic' + (red ? ' red' : '') + '">' + icon + '</span>' + label + '</div>' +
+           '<div class="k-val">' + val + '</div><div class="k-sub">' + sub + '</div></div>';
+  }
+  function statusPill(f) {
+    if (f.status === 'Ramping') return '<span class="pill warn"><span class="pd"></span>Ramping</span>';
+    return '<span class="pill ok"><span class="pd"></span>Active</span>';
+  }
+  function stagePill(stage) {
+    if (stage.indexOf('Signed') === 0) return '<span class="pill ok"><span class="pd"></span>' + stage + '</span>';
+    return '<span class="pill info"><span class="pd"></span>' + stage + '</span>';
+  }
+
+  /* ---- NETWORK ---- */
+  function renderNetwork() {
+    var t = S.networkTotals();
+    var fr = S.franchises();
+    $('net-kpis').innerHTML =
+      kpi(I.bldg, num0(t.customers), 'Customers', fr.length + ' franchises', false) +
+      kpi(I.truck, num0(t.vehicles), 'Active vehicles', num0(t.trucks) + ' tankers · ' + num0(t.drivers) + ' drivers', false) +
+      kpi(I.chart, money0(t.mrr), 'Network MRR', 'recurring, month-to-date', true) +
+      kpi(I.gauge, num0(t.gallonsMTD), 'Gallons delivered MTD', 'across the network', false);
+
+    $('net-sub').textContent = fr.length + ' locations';
+    $('net-rows').innerHTML = fr.map(function (f) {
+      return '<div class="row"><div class="r-ic">' + I.bldg + '</div>' +
+        '<div class="r-main"><b>' + f.name + ' ' + statusPill(f) + '</b><span>' + f.region + ' · ' + f.owner + ' · opened ' + f.opened + '</span></div>' +
+        '<div class="r-end"><span class="mono">' + money0(f.mrr) + '</span><small>' + num0(f.customers) + ' customers · ' + num0(f.activeVehicles) + ' vehicles</small></div></div>';
+    }).join('');
+
+    $('net-stats').innerHTML =
+      '<div class="stat-inline" style="row-gap:20px">' +
+        '<div class="si"><b>' + num0(t.trucks) + '</b><span>EV tankers</span></div>' +
+        '<div class="si"><b>' + num0(t.drivers) + '</b><span>drivers on staff</span></div>' +
+        '<div class="si"><b>' + num0(t.gallonsMTD) + '</b><span>gallons MTD</span></div>' +
+        '<div class="si"><b>' + money0(t.savingsMTD) + '</b><span>saved for customers MTD</span></div>' +
+      '</div>' +
+      '<p class="note" style="margin-top:18px">Customers across the network have saved <b>' + money0(t.savingsMTD) + '</b> against the local pump this month — the proof point every new franchise sells on.</p>';
+  }
+
+  /* ---- FRANCHISES ---- */
+  function renderFranchises() {
+    var fr = S.franchises();
+    $('fr-tbl').innerHTML =
+      '<thead><tr><th>Franchise</th><th>Region</th><th>Status</th><th class="r">Customers</th><th class="r">Trucks</th><th class="r">Drivers</th><th class="r">MRR</th><th class="r">Royalty MTD</th><th>Compliance</th></tr></thead><tbody>' +
+      fr.map(function (f) {
+        return '<tr><td><div class="cell-2"><b>' + f.name + '</b><span>' + f.owner + ' · opened ' + f.opened + '</span></div></td>' +
+          '<td>' + f.region + '</td><td>' + statusPill(f) + '</td>' +
+          '<td class="r num">' + num0(f.customers) + '</td><td class="r num">' + num0(f.trucks) + '</td><td class="r num">' + num0(f.drivers) + '</td>' +
+          '<td class="r num">' + money0(f.mrr) + '</td><td class="r num">' + money0(f.royaltyMTD) + '</td>' +
+          '<td style="min-width:150px"><div class="gauge-row"><span class="gl">' + f.complianceScore + '</span>' +
+            '<div class="bar mono thin"><span style="width:' + f.complianceScore + '%"></span></div></div></td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  /* ---- FINANCE ---- */
+  function renderFinance() {
+    var fr = S.franchises();
+    var t = S.networkTotals();
+    var brandFees = fr.reduce(function (a, f) { return a + f.mrr * f.brandFee; }, 0);
+
+    $('fin-kpis').innerHTML =
+      kpi(I.chart, money0(t.mrr), 'Network MRR', 'across all franchises', false) +
+      kpi(I.receipt, money0(t.royaltyMTD), 'Royalties MTD', '6% of revenue', true) +
+      kpi(I.receipt, money0(brandFees), 'Brand fees MTD', '1% brand fund', false) +
+      kpi(I.truck, money0(t.savingsMTD), 'Customer savings MTD', 'value delivered', false);
+
+    var tot = { mrr: 0, roy: 0, brand: 0, lease: 0, hq: 0 };
+    var rows = fr.map(function (f) {
+      var roy = f.royaltyMTD;
+      var brand = f.mrr * f.brandFee;
+      var lease = f.trucks * f.techLeasePerTruck;
+      var hq = roy + brand + lease;
+      tot.mrr += f.mrr; tot.roy += roy; tot.brand += brand; tot.lease += lease; tot.hq += hq;
+      return '<tr><td><div class="cell-2"><b>' + f.name + '</b><span>' + f.region + '</span></div></td>' +
+        '<td class="r num">' + money0(f.mrr) + '</td><td class="r num">' + money0(roy) + '</td>' +
+        '<td class="r num">' + money0(brand) + '</td><td class="r num">' + money0(lease) + '</td>' +
+        '<td class="r num">' + money0(hq) + '</td></tr>';
+    }).join('');
+
+    $('fin-tbl').innerHTML =
+      '<thead><tr><th>Franchise</th><th class="r">MRR</th><th class="r">Royalty · 6%</th><th class="r">Brand fee · 1%</th><th class="r">Tech lease</th><th class="r">Total to HQ</th></tr></thead><tbody>' +
+      rows +
+      '<tr class="tot"><td>Network total</td><td class="r num">' + money0(tot.mrr) + '</td><td class="r num">' + money0(tot.roy) + '</td>' +
+      '<td class="r num">' + money0(tot.brand) + '</td><td class="r num">' + money0(tot.lease) + '</td><td class="r num">' + money0(tot.hq) + '</td></tr>' +
+      '</tbody>';
+  }
+
+  /* ---- COMPLIANCE ---- */
+  function renderCompliance() {
+    var fr = S.franchises();
+    var alerts = S.alerts();
+    var avgUp = fr.reduce(function (a, f) { return a + f.uptime; }, 0) / fr.length;
+    var avgComp = Math.round(fr.reduce(function (a, f) { return a + f.complianceScore; }, 0) / fr.length);
+
+    $('comp-kpis').innerHTML =
+      kpi(I.gauge, pct1(avgUp), 'Platform uptime', 'network average', false) +
+      kpi(I.shield, avgComp + '<span style="font-size:1rem;color:var(--fg-3)"> / 100</span>', 'Avg compliance score', 'across franchises', false) +
+      kpi(I.shield, num0(alerts.length), 'Open alerts', 'flagged tonight', true);
+
+    var sevClass = { high: 'high', med: 'med', low: 'low' };
+    $('comp-alert-sub').textContent = alerts.length + ' open';
+    $('comp-alerts').innerHTML = alerts.map(function (a) {
+      var fName = (S.franchise(a.franchise) || {}).name || a.franchise;
+      return '<div class="alert ' + (sevClass[a.sev] || '') + '"><span class="a-dot"></span>' +
+        '<div><b>' + a.kind + '</b><p>' + a.detail + '</p>' +
+        '<span class="muted" style="font-size:.74rem">' + fName + '</span></div>' +
+        '<span class="a-when">' + a.when + '</span></div>';
+    }).join('');
+
+    $('comp-scores').innerHTML = fr.map(function (f) {
+      return '<div class="gauge-row" style="margin-bottom:14px">' +
+        '<span class="gl" style="min-width:90px;text-align:left;font-family:inherit;color:var(--fg-2)">' + f.name.replace('StaFull ', '') + '</span>' +
+        '<div class="bar mono"><span style="width:' + f.complianceScore + '%"></span></div>' +
+        '<span class="gl">' + f.complianceScore + '</span></div>';
+    }).join('') +
+      '<p class="note" style="margin-top:6px">Every franchise is held to a minimum compliance score; ramping locations are coached up before new territory is awarded nearby.</p>';
+
+    var pipe = S.pipeline();
+    $('comp-pipe').innerHTML =
+      '<thead><tr><th>Market</th><th>Candidate</th><th>Stage</th><th class="r">Franchise value</th></tr></thead><tbody>' +
+      pipe.map(function (p) {
+        return '<tr><td><b>' + p.market + '</b></td><td>' + p.candidate + '</td><td>' + stagePill(p.stage) + '</td>' +
+          '<td class="r num">' + money0(p.value) + '</td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  /* ---- real Leaflet footprint map (built once) ---- */
+  function initMap() {
+    if (typeof L === 'undefined' || !window.StaFullMap) { document.getElementById('net-map').innerHTML = '<div class="empty">Map unavailable offline.</div>'; return; }
+    var fr = S.franchises();
+    var map = StaFullMap.create('net-map', { center: [31.3, -99.2], zoom: 5 });
+    var pts = [];
+    fr.forEach(function (f) {
+      var g = SEED.franchiseGeo[f.id]; if (!g) return;
+      var active = f.status !== 'Ramping';
+      StaFullMap.pin(map, g.lat, g.lng, { kind: 'city', label: f.name.replace('StaFull ', ''),
+        color: active ? '#22c55e' : '#fbbf24', live: active, title: f.name + ' · ' + f.status });
+      pts.push([g.lat, g.lng]);
+    });
+    StaFullMap.fit(map, pts, 55);
+    document.getElementById('net-legend').innerHTML =
+      '<span class="lg"><span class="d" style="background:#22c55e"></span>Active market</span>' +
+      '<span class="lg"><span class="d" style="background:#fbbf24"></span>Ramping</span>';
+  }
+
+  /* ---- render all + live subscribe (MRR / gallons tick with live deliveries) ---- */
+  function renderAll() { renderNetwork(); renderFranchises(); renderFinance(); renderCompliance(); }
+  renderAll();
+  initMap();
+  S.subscribe(renderAll);
+})();
+</script>
+</body>
+</html>

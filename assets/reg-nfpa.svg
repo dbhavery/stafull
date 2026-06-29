@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 38" fill="none" role="img" aria-label="NFPA 30A compliant">
+  <rect x="1" y="1" width="118" height="36" rx="9" stroke="#c7cad4" stroke-opacity=".5"/>
+  <path d="M15 9l6.5 2.6v4.4c0 3.6-2.7 5.4-6.5 7.2-3.8-1.8-6.5-3.6-6.5-7.2v-4.4z" stroke="#c7cad4" stroke-opacity=".9" stroke-width="1.3"/>
+  <path d="M11.8 16.2l2.2 2.2 4-4.1" stroke="#c7cad4" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="32" y="24.5" font-family="Arial,Helvetica,sans-serif" font-size="13.5" font-weight="700" fill="#d2d5de" letter-spacing=".3">NFPA 30A</text>
+</svg>

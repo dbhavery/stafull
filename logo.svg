@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="StaFull fuel-gauge logo">
+  <rect width="256" height="256" rx="56" ry="56" fill="#0B0B0B"/>
+  <!-- Gauge Arc (locked) -->
+  <path d="M32 184 A96 96 0 0 1 224 184"
+        fill="none"
+        stroke="#D6D6D6"
+        stroke-width="14"
+        stroke-linecap="round"/>
+  <!-- Needle (locked) -->
+  <line x1="128" y1="184" x2="214" y2="168"
+        stroke="#A30000"
+        stroke-width="16"
+        stroke-linecap="round"/>
+  <!-- Hub (locked) -->
+  <circle cx="128" cy="184" r="11" fill="#B0B0B0"/>
+</svg>

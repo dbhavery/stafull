@@ -1,0 +1,46 @@
+/* StaFull Leaflet theme — dark monochrome map, brand-red markers.
+   Load after leaflet.css. Used by coverage (marketing) + dashboards (app). */
+
+.sf-map { width: 100%; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,.10); }
+.leaflet-container { background: #0a0a0d; font-family: 'Montserrat', system-ui, sans-serif; }
+.leaflet-container a { color: rgba(246,246,248,.72); }
+
+/* tiles already dark; soften a touch and de-saturate any residual hue */
+.leaflet-tile { filter: grayscale(1) brightness(.92) contrast(1.02); }
+
+/* controls */
+.leaflet-bar a { background: #16161b; color: #f6f6f8; border-bottom-color: rgba(255,255,255,.12); }
+.leaflet-bar a:hover { background: #22222a; }
+.leaflet-control-attribution {
+  background: rgba(8,8,10,.7) !important; color: rgba(246,246,248,.45) !important;
+  font-size: 10px; padding: 2px 6px; backdrop-filter: blur(4px);
+}
+.leaflet-control-attribution a { color: rgba(246,246,248,.6) !important; }
+
+/* markers — color is set inline per-marker (mapkit.js); CSS sets size/shape only */
+.sf-mk { position: relative; display: grid; place-items: center; width: 100%; height: 100%; }
+.sf-mk-dot { width: 12px; height: 12px; border-radius: 50%; position: relative; z-index: 1; }
+.sf-mk-truck .sf-mk-dot { width: 16px; height: 16px; }
+.sf-mk-city .sf-mk-dot { width: 13px; height: 13px; }
+.sf-mk-stop .sf-mk-dot { width: 9px; height: 9px; }
+.sf-mk-depot .sf-mk-dot { width: 12px; height: 12px; border-radius: 3px; }
+/* colored pulse ring (border uses the marker color via currentColor) */
+.sf-mk-pulse { position: absolute; width: 130%; height: 130%; border-radius: 50%;
+  border: 2px solid currentColor; animation: mkring 2s infinite; pointer-events: none; }
+@keyframes mkring { 0% { transform: scale(.55); opacity: .7; } 100% { transform: scale(2.3); opacity: 0; } }
+.sf-mk-lbl {
+  position: absolute; left: 50%; top: 100%; transform: translateX(-50%); margin-top: 4px;
+  white-space: nowrap; font-size: 11px; font-weight: 700; color: #f6f6f8;
+  background: rgba(10,10,13,.82); border: 1px solid rgba(255,255,255,.14); border-radius: 6px;
+  padding: 1px 7px; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,.5);
+}
+.sf-mk-city .sf-mk-lbl { font-family: 'JetBrains Mono', monospace; letter-spacing: .02em; }
+
+/* a legend row for under maps */
+.map-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 12px; }
+.map-legend .lg { display: flex; align-items: center; gap: 8px; font-size: .8rem; color: rgba(246,246,248,.72); }
+.map-legend .lg .d { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.map-legend .lg .d.red { background: #a30000; box-shadow: 0 0 0 3px rgba(163,0,0,.2); }
+.map-legend .lg .d.live { background: #a30000; box-shadow: 0 0 0 3px rgba(163,0,0,.3); }
+.map-legend .lg .d.stop { background: rgba(246,246,248,.85); }
+.map-legend .lg .d.depot { background: rgba(246,246,248,.6); border-radius: 2px; }

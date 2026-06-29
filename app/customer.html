@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer portal — StaFull</title>
+<meta name="description" content="StaFull customer portal demo — vehicles, deliveries, savings and billing.">
+<meta name="theme-color" content="#08080a">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app">
+  <aside class="app-side" id="app-side"></aside>
+  <div class="app-main">
+    <header class="app-top" id="app-top"></header>
+    <div class="app-content">
+
+      <!-- OVERVIEW -->
+      <section class="view" id="view-overview" data-title="Overview">
+        <div class="kpis" id="cust-kpis"></div>
+        <div class="cols cols-2-1">
+          <div class="panel">
+            <div class="panel-head"><h3>Live delivery</h3><span class="ph-sub" id="live-sub">—</span></div>
+            <div class="panel-body" id="live-body"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Next up</h3></div>
+            <div class="panel-body flush"><div class="rows" id="next-rows" style="padding:0 18px"></div></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-top:18px">
+          <div class="panel-head"><h3>Recent deliveries</h3><div class="ph-act"><button class="btn btn-ghost btn-sm" data-goto="deliveries">View all</button></div></div>
+          <div class="panel-body flush"><table class="tbl" id="recent-tbl"></table></div>
+        </div>
+      </section>
+
+      <!-- VEHICLES -->
+      <section class="view" id="view-vehicles" data-title="My Vehicles">
+        <div class="view-head"><h2>My vehicles</h2><p>Every vehicle on your account, its current fuel level, and its grade. Low tanks are flagged for the next run.</p></div>
+        <div class="panel"><div class="panel-body flush"><table class="tbl" id="veh-tbl"></table></div></div>
+      </section>
+
+      <!-- SCHEDULE -->
+      <section class="view" id="view-schedule" data-title="Schedule a Fill">
+        <div class="view-head"><h2>Schedule a fill</h2><p>Pick a vehicle and a window. We bring the right grade to where it's parked and verify it before a drop flows.</p></div>
+        <div class="cols cols-2-1">
+          <div class="panel">
+            <div class="panel-head"><h3>New delivery</h3></div>
+            <div class="panel-body">
+              <div class="fld"><label for="sch-veh">Vehicle</label><select id="sch-veh"></select></div>
+              <div class="fld"><label for="sch-when">Window</label>
+                <select id="sch-when">
+                  <option>Tonight · 8–11 PM</option>
+                  <option>Tomorrow · 8–11 PM</option>
+                  <option>This weekend</option>
+                  <option>Next scheduled run</option>
+                </select>
+              </div>
+              <div class="fld" id="sch-est"></div>
+              <button class="btn btn-red" id="sch-go" style="width:100%;justify-content:center">Schedule delivery</button>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Upcoming</h3></div>
+            <div class="panel-body flush"><div class="rows" id="sch-list" style="padding:0 18px"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DELIVERIES -->
+      <section class="view" id="view-deliveries" data-title="Deliveries">
+        <div class="view-head"><h2>Deliveries</h2><p>Every fill on your account — scheduled, in progress, and complete — each verified and logged with its savings against the local pump.</p></div>
+        <div class="panel"><div class="panel-body flush"><table class="tbl" id="del-tbl"></table></div></div>
+      </section>
+
+      <!-- BILLING -->
+      <section class="view" id="view-invoices" data-title="Billing">
+        <div class="view-head"><h2>Billing</h2><p>Itemized invoices with the savings line spelled out. Commercial accounts bill on NET terms; personal plans bill the card on file.</p></div>
+        <div class="kpis kpis-3" id="bill-kpis"></div>
+        <div class="panel"><div class="panel-head"><h3>Invoices</h3></div><div class="panel-body flush"><table class="tbl" id="inv-tbl"></table></div></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="mode.js"></script>
+<script src="seed.js"></script>
+<script src="store.js"></script>
+<script src="ui.js"></script>
+<script>
+(function () {
+  var S = window.StaFullStore;
+  var app = StaFullApp.mount({ role: 'customer', active: 'overview' });
+  var cust = S.currentCustomer();
+  var $ = function (id) { return document.getElementById(id); };
+  function money(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function pct(n) { return Math.round(n * 100) + '%'; }
+  function ftag(grade) { return '<span class="ftag ftag-' + grade + '">' + S.fuel(grade).label + '</span>'; }
+  function statusPill(d) {
+    if (d.status === 'dispensing') return '<span class="pill live"><span class="pd"></span>Dispensing ' + Math.round(d.pct) + '%</span>';
+    if (d.status === 'enroute')    return '<span class="pill info"><span class="pd"></span>En route</span>';
+    if (d.status === 'scheduled')  return '<span class="pill warn"><span class="pd"></span>Scheduled</span>';
+    if (d.status === 'flagged')    return '<span class="pill flag"><span class="pd"></span>Held · re-verify</span>';
+    return '<span class="pill ok"><span class="pd"></span>Complete</span>';
+  }
+  function veh(id) { return S.vehicle(id); }
+
+  /* ---- nav buttons inside content ---- */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-goto]'); if (b) app.show(b.dataset.goto);
+  });
+
+  /* ---- overview ---- */
+  function renderKpis() {
+    var vs = S.vehiclesFor(cust.id);
+    var low = vs.filter(function (v) { return v.level < 0.3; }).length;
+    var inv = S.invoicesFor(cust.id);
+    var curr = inv[inv.length - 1] || { fills: 0 };
+    $('cust-kpis').innerHTML =
+      kpi(StaFullApp.icons.truck, vs.length, 'Vehicles on account', low + ' low on fuel', false) +
+      kpi(StaFullApp.icons.route, '1', 'Delivery in progress', 'tonight’s run', true) +
+      kpi(StaFullApp.icons.receipt, money(cust.savingsToDate), 'Saved vs. the pump', 'since ' + cust.since, false) +
+      kpi(StaFullApp.icons.cal, curr.fills, 'Fills this month', curr.period || '', false);
+  }
+  function kpi(icon, val, label, sub, red) {
+    return '<div class="kpi"><div class="k-label"><span class="ic' + (red ? ' red' : '') + '">' + icon + '</span>' + label + '</div>' +
+           '<div class="k-val">' + val + '</div><div class="k-sub">' + sub + '</div></div>';
+  }
+  function renderLive() {
+    var d = S.deliveriesFor({ customerId: cust.id }).filter(function (x) { return x.status === 'dispensing'; })[0];
+    var body = $('live-body'), sub = $('live-sub');
+    if (!d) {
+      // fall back to next enroute/scheduled
+      d = S.deliveriesFor({ customerId: cust.id }).filter(function (x) { return x.status === 'enroute' || x.status === 'scheduled'; })[0];
+      if (!d) { body.innerHTML = '<div class="empty">No active delivery right now.</div>'; sub.textContent = '—'; return; }
+    }
+    var v = veh(d.vehicleId);
+    sub.textContent = d.window;
+    var live = d.status === 'dispensing';
+    body.innerHTML =
+      '<div class="row" style="border:0;padding:0 0 14px">' +
+        '<div class="r-ic red">' + StaFullApp.icons.truck + '</div>' +
+        '<div class="r-main"><b>' + v.name + ' · ' + v.model + '</b><span>' + v.plate + ' · ' + d.addr + '</span></div>' +
+        '<div class="r-end">' + statusPill(d) + '<small>' + ftag(v.fuel).replace(/<[^>]+>/g, '') + ' · ' + d.gallons + ' gal target</small></div>' +
+      '</div>' +
+      (live ?
+        '<div class="gauge-row" style="margin:6px 0 14px"><span class="gl">' + Math.round(d.pct) + '%</span>' +
+          '<div class="bar"><span style="width:' + d.pct + '%"></span></div></div>' +
+        '<div class="dc-rows">' +
+          row2('Delivered', S.deliveredGallons(d) + ' gal') +
+          row2('Pump price', money(S.fuel(d.fuel).pump) + '/gal') +
+          row2('Your price', money(S.fuel(d.fuel).ours) + '/gal') +
+          '<div class="dc-row dc-save"><span>Saved so far</span><span class="mono">' + money(S.liveSavings(d)) + '</span></div>' +
+          '<div class="dc-row"><span>Verification</span><span class="dc-ok">' + (d.verified ? '✓ vehicle &amp; fuel-type confirmed' : 'pending') + '</span></div>' +
+        '</div>'
+        :
+        '<p class="muted" style="font-size:.9rem">Scheduled for ' + d.window + ' — ' + d.gallons + ' gal of ' + S.fuel(d.fuel).label + '. We’ll verify the vehicle and grade on arrival.</p>');
+  }
+  function row2(a, b) { return '<div class="dc-row"><span>' + a + '</span><span class="mono">' + b + '</span></div>'; }
+
+  function renderNext() {
+    var ds = S.deliveriesFor({ customerId: cust.id }).filter(function (d) { return d.status === 'enroute' || d.status === 'scheduled'; });
+    if (!ds.length) { $('next-rows').innerHTML = '<div class="empty">Nothing scheduled.</div>'; return; }
+    $('next-rows').innerHTML = ds.map(function (d) {
+      var v = veh(d.vehicleId);
+      return '<div class="row"><div class="r-ic">' + StaFullApp.icons.cal + '</div>' +
+        '<div class="r-main"><b>' + v.name + '</b><span>' + S.fuel(d.fuel).label + ' · ' + d.gallons + ' gal</span></div>' +
+        '<div class="r-end"><span class="mono">' + d.window + '</span><small>' + statusPill(d).replace(/<[^>]+>/g, '') + '</small></div></div>';
+    }).join('');
+  }
+  function renderRecent() {
+    var ds = S.deliveriesFor({ customerId: cust.id }).filter(function (d) { return d.status === 'complete'; }).slice(-5).reverse();
+    $('recent-tbl').innerHTML =
+      '<thead><tr><th>Vehicle</th><th>Fuel</th><th class="r">Gallons</th><th class="r">Saved</th><th>Status</th></tr></thead><tbody>' +
+      (ds.length ? ds.map(function (d) { var v = veh(d.vehicleId);
+        return '<tr><td><div class="cell-2"><b>' + v.name + '</b><span>' + d.window + ' · ' + d.addr + '</span></div></td>' +
+          '<td>' + ftag(v.fuel) + '</td><td class="r num">' + d.gallons + '</td><td class="r num">' + money(d.savings) + '</td>' +
+          '<td>' + statusPill(d) + '</td></tr>';
+      }).join('') : '<tr><td colspan="5" class="empty">No completed deliveries yet.</td></tr>') + '</tbody>';
+  }
+
+  /* ---- vehicles ---- */
+  function renderVehicles() {
+    var vs = S.vehiclesFor(cust.id);
+    $('veh-tbl').innerHTML =
+      '<thead><tr><th>Vehicle</th><th>Plate</th><th>Fuel</th><th>Tank level</th><th class="r"></th></tr></thead><tbody>' +
+      vs.map(function (v) {
+        var low = v.level < 0.3;
+        return '<tr><td><div class="cell-2"><b>' + v.name + '</b><span>' + v.model + ' · ' + v.tankCap + ' gal</span></div></td>' +
+          '<td class="mono">' + v.plate + '</td><td>' + ftag(v.fuel) + '</td>' +
+          '<td style="min-width:170px"><div class="gauge-row"><span class="gl">' + pct(v.level) + '</span>' +
+            '<div class="bar' + (low ? ' low' : ' mono') + '"><span style="width:' + (v.level * 100) + '%"></span></div></div></td>' +
+          '<td class="r"><button class="btn btn-ghost btn-sm" data-sch="' + v.id + '">' + (low ? 'Fill now' : 'Schedule') + '</button></td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  /* ---- schedule ---- */
+  function renderScheduleForm() {
+    var vs = S.vehiclesFor(cust.id);
+    $('sch-veh').innerHTML = vs.map(function (v) {
+      return '<option value="' + v.id + '">' + v.name + ' · ' + v.model + ' (' + pct(v.level) + ')</option>';
+    }).join('');
+    updateEst();
+  }
+  function updateEst() {
+    var v = veh($('sch-veh').value); if (!v) return;
+    var gal = Math.round(v.tankCap * (1 - v.level));
+    var saved = (S.perGalSavings(v.fuel) * gal).toFixed(2);
+    $('sch-est').innerHTML = '<label>Estimate</label><div class="panel" style="background:rgba(255,255,255,.02)"><div class="panel-body" style="padding:14px 16px">' +
+      '<div class="stat-inline"><div class="si"><b>~' + gal + '</b><span>gallons to full</span></div>' +
+      '<div class="si"><b>' + S.fuel(v.fuel).label + '</b><span>grade</span></div>' +
+      '<div class="si"><b>$' + saved + '</b><span>est. saved vs. pump</span></div></div></div></div>';
+  }
+  function renderScheduleList() {
+    var ds = S.deliveriesFor({ customerId: cust.id }).filter(function (d) { return d.status === 'scheduled' || d.status === 'enroute'; });
+    $('sch-list').innerHTML = ds.length ? ds.map(function (d) { var v = veh(d.vehicleId);
+      return '<div class="row"><div class="r-ic">' + StaFullApp.icons.cal + '</div>' +
+        '<div class="r-main"><b>' + v.name + '</b><span>' + S.fuel(d.fuel).label + ' · ' + d.gallons + ' gal · ' + d.addr + '</span></div>' +
+        '<div class="r-end"><span class="mono">' + d.window + '</span></div></div>';
+    }).join('') : '<div class="empty">No upcoming deliveries scheduled.</div>';
+  }
+
+  /* ---- deliveries (all) ---- */
+  function renderDeliveries() {
+    var ds = S.deliveriesFor({ customerId: cust.id }).slice().reverse();
+    $('del-tbl').innerHTML =
+      '<thead><tr><th>Vehicle</th><th>Window</th><th>Fuel</th><th class="r">Gallons</th><th class="r">Amount</th><th class="r">Saved</th><th>Status</th></tr></thead><tbody>' +
+      ds.map(function (d) { var v = veh(d.vehicleId);
+        var g = d.status === 'dispensing' ? S.deliveredGallons(d) : d.gallons;
+        var amt = d.status === 'dispensing' ? S.liveAmount(d) : d.amount;
+        var sv = d.status === 'dispensing' ? S.liveSavings(d) : d.savings;
+        return '<tr><td><div class="cell-2"><b>' + v.name + '</b><span>' + v.plate + '</span></div></td>' +
+          '<td>' + d.window + '</td><td>' + ftag(v.fuel) + '</td><td class="r num">' + g + '</td>' +
+          '<td class="r num">' + money(amt) + '</td><td class="r num">' + money(sv) + '</td><td>' + statusPill(d) + '</td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  /* ---- billing ---- */
+  function renderBilling() {
+    var inv = S.invoicesFor(cust.id);
+    var totalSaved = inv.reduce(function (a, i) { return a + i.savings; }, 0);
+    var due = inv.filter(function (i) { return i.status.indexOf('Due') === 0; }).reduce(function (a, i) { return a + i.amount; }, 0);
+    $('bill-kpis').innerHTML =
+      kpi(StaFullApp.icons.receipt, cust.terms, 'Billing terms', cust.plan, false) +
+      kpi(StaFullApp.icons.chart, money(due), 'Balance due', 'across open invoices', true) +
+      kpi(StaFullApp.icons.truck, money(totalSaved), 'Saved on these invoices', 'vs. local pump', false);
+    $('inv-tbl').innerHTML =
+      '<thead><tr><th>Invoice</th><th>Period</th><th class="r">Fills</th><th class="r">Gallons</th><th class="r">Amount</th><th class="r">Saved</th><th>Status</th></tr></thead><tbody>' +
+      inv.map(function (i) {
+        var pill = i.status === 'Paid' ? '<span class="pill ok"><span class="pd"></span>Paid</span>' : '<span class="pill warn"><span class="pd"></span>' + i.status + '</span>';
+        return '<tr><td class="mono">' + i.id + '</td><td>' + i.period + '</td><td class="r num">' + i.fills + '</td>' +
+          '<td class="r num">' + i.gallons.toLocaleString() + '</td><td class="r num">' + money(i.amount) + '</td>' +
+          '<td class="r num">' + money(i.savings) + '</td><td>' + pill + '</td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  /* ---- schedule actions ---- */
+  document.addEventListener('click', function (e) {
+    var sb = e.target.closest('[data-sch]');
+    if (sb) { app.show('schedule'); $('sch-veh').value = sb.dataset.sch; updateEst(); }
+  });
+  $('sch-veh').addEventListener('change', updateEst);
+  $('sch-go').addEventListener('click', function () {
+    var v = $('sch-veh').value, when = $('sch-when').value;
+    S.scheduleFill(v, when);
+    toast('Delivery scheduled — ' + when.toLowerCase());
+    renderScheduleList(); renderNext(); renderDeliveries();
+  });
+  function toast(msg) {
+    var t = document.querySelector('.toast');
+    if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
+    t.innerHTML = '<span class="tk"></span>' + msg; t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+
+  /* ---- render all + live subscribe ---- */
+  function renderStatic() { renderVehicles(); renderScheduleForm(); renderScheduleList(); renderDeliveries(); renderBilling(); }
+  function renderLiveBits() { renderKpis(); renderLive(); renderNext(); renderRecent(); }
+  renderStatic(); renderLiveBits();
+  S.subscribe(function () { renderLiveBits(); renderDeliveries(); renderVehicles(); });
+})();
+</script>
+</body>
+</html>

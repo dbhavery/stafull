@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Franchise console — StaFull</title>
+<meta name="description" content="StaFull franchise console demo — dispatch, fleet, territory, and unit P&L.">
+<meta name="theme-color" content="#08080a">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="../mapkit.css">
+<style>
+  .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+  .inv-cell { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .82rem; color: var(--fg-2); }
+  .inv-cell .mono { font-family: var(--mono); color: var(--fg); }
+  .pnl-emph td { background: rgba(163,0,0,.12); }
+  .pnl-emph td b, .pnl-emph td .num { color: #fff; }
+  .tbl td.neg { color: var(--fg-2); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="app-side" id="app-side"></aside>
+  <div class="app-main">
+    <header class="app-top" id="app-top"></header>
+    <div class="app-content">
+
+      <!-- DISPATCH -->
+      <section class="view" id="view-dispatch" data-title="Dispatch">
+        <div class="kpis" id="disp-kpis"></div>
+        <div class="panel" style="margin-bottom:18px">
+          <div class="panel-head"><h3>Live fleet map</h3><span class="ph-sub">Dallas–Fort Worth · tankers &amp; stops, real time</span></div>
+          <div class="panel-body">
+            <div id="disp-map" class="sf-map" style="height:400px"></div>
+            <div class="map-legend">
+              <span class="lg"><span class="d" style="background:#06b6d4"></span>Tanker · on route</span>
+              <span class="lg"><span class="d" style="background:#9a9a9a;border-radius:2px"></span>Depot</span>
+              <span class="lg"><span class="d" style="background:#e0e0e0"></span>Customer stop</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel" style="margin-bottom:18px">
+          <div class="panel-head"><h3>Tonight's board</h3><span class="ph-sub" id="disp-sub">—</span></div>
+          <div class="panel-body flush"><table class="tbl" id="disp-tbl"></table></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Open alerts</h3><span class="ph-sub" id="disp-alert-sub">—</span></div>
+          <div class="panel-body flush"><div id="disp-alerts"></div></div>
+        </div>
+      </section>
+
+      <!-- FLEET -->
+      <section class="view" id="view-fleet" data-title="Drivers & Trucks">
+        <div class="view-head"><h2>Drivers &amp; trucks</h2><p>Who's on shift tonight and where every EV tanker stands — battery, status, and what each is carrying across the four grades.</p></div>
+        <div class="panel" style="margin-bottom:18px">
+          <div class="panel-head"><h3>Drivers</h3><span class="ph-sub" id="drv-sub">—</span></div>
+          <div class="panel-body flush"><table class="tbl" id="drv-tbl"></table></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>EV tankers</h3><span class="ph-sub">battery &amp; on-board inventory</span></div>
+          <div class="panel-body flush"><table class="tbl" id="tkr-tbl"></table></div>
+        </div>
+      </section>
+
+      <!-- TERRITORY -->
+      <section class="view" id="view-territory" data-title="Territory">
+        <div class="view-head"><h2>Territory</h2><p>The Dallas–Fort Worth service area — coverage zones, active service pins tonight, and every account on the books.</p></div>
+        <div class="cols cols-2-1" style="margin-bottom:18px">
+          <div class="panel">
+            <div class="panel-head"><h3>Coverage map</h3><span class="ph-sub">DFW metro · accounts</span></div>
+            <div class="panel-body">
+              <div id="terr-map" class="sf-map" style="height:340px"></div>
+              <div class="map-legend">
+                <span class="lg"><span class="d red"></span>Account</span>
+                <span class="lg"><span class="d depot"></span>Depot</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>At a glance</h3></div>
+            <div class="panel-body" id="terr-stats"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Accounts</h3><span class="ph-sub" id="terr-cust-sub">—</span></div>
+          <div class="panel-body flush"><table class="tbl" id="terr-tbl"></table></div>
+        </div>
+      </section>
+
+      <!-- P&L -->
+      <section class="view" id="view-pnl" data-title="P&L">
+        <div class="view-head"><h2>Unit economics</h2><p>Month-to-date profit and loss for this franchise. Royalty, brand fee, and truck lease are the StaFull franchise model — fixed, transparent, and built into every fill.</p></div>
+        <div class="kpis" id="pnl-kpis"></div>
+        <div class="panel">
+          <div class="panel-head"><h3>P&amp;L statement</h3><span class="ph-sub">month-to-date</span></div>
+          <div class="panel-body flush"><table class="tbl" id="pnl-tbl"></table></div>
+        </div>
+        <p class="muted" style="font-size:.82rem;margin-top:14px;max-width:64ch">
+          Royalty (6% of revenue) and brand fee (1%) flow to StaFull HQ; truck lease is $600/mo per EV tanker.
+          These are the franchise economics — known up front, the same for every unit in the network.
+        </p>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../mapkit.js"></script>
+<script src="mode.js"></script>
+<script src="seed.js"></script>
+<script src="store.js"></script>
+<script src="ui.js"></script>
+<script>
+(function () {
+  var S = window.StaFullStore;
+  var SEED = window.STAFULL_SEED;
+  var app = StaFullApp.mount({ role: 'franchise', active: 'dispatch' });
+  var fr = S.currentFranchise();
+  var I = StaFullApp.icons;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function money(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+  function money2(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function pct(n) { return Math.round(n * 100) + '%'; }
+  function ftag(grade) { return '<span class="ftag ftag-' + grade + '">' + S.fuel(grade).label + '</span>'; }
+  function veh(id) { return S.vehicle(id); }
+
+  function statusPill(d) {
+    if (d.status === 'dispensing') return '<span class="pill live"><span class="pd"></span>Dispensing ' + Math.round(d.pct) + '%</span>';
+    if (d.status === 'enroute')    return '<span class="pill info"><span class="pd"></span>En route</span>';
+    if (d.status === 'scheduled')  return '<span class="pill warn"><span class="pd"></span>Scheduled</span>';
+    if (d.status === 'flagged')    return '<span class="pill flag"><span class="pd"></span>Held · re-verify</span>';
+    return '<span class="pill ok"><span class="pd"></span>Complete</span>';
+  }
+  function drvPill(status) {
+    if (status === 'Dispensing') return '<span class="pill live"><span class="pd"></span>Dispensing</span>';
+    if (status === 'Driving')    return '<span class="pill info"><span class="pd"></span>Driving</span>';
+    if (status === 'Pre-trip')   return '<span class="pill warn"><span class="pd"></span>Pre-trip</span>';
+    if (status === 'Available')  return '<span class="pill ok"><span class="pd"></span>Available</span>';
+    return '<span class="pill muted"><span class="pd"></span>Off shift</span>';
+  }
+  function tkrPill(status) {
+    if (status === 'On route') return '<span class="pill live"><span class="pd"></span>On route</span>';
+    return '<span class="pill muted"><span class="pd"></span>' + status + '</span>';
+  }
+  function typePill(type) {
+    var label = type.charAt(0) + type.slice(1).toLowerCase();
+    return '<span class="pill"><span class="pd"></span>' + label + '</span>';
+  }
+  function kpi(icon, val, label, sub, red) {
+    return '<div class="kpi"><div class="k-label"><span class="ic' + (red ? ' red' : '') + '">' + icon + '</span>' + label + '</div>' +
+           '<div class="k-val">' + val + '</div><div class="k-sub">' + sub + '</div></div>';
+  }
+
+  var ON_SHIFT = { Driving: 1, Dispensing: 1, 'Pre-trip': 1 };
+
+  /* ---- nav buttons inside content ---- */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-goto]'); if (b) app.show(b.dataset.goto);
+  });
+
+  /* ============ DISPATCH ============ */
+  function renderDispKpis() {
+    var all = S.deliveriesFor({});
+    var active = all.filter(function (d) { return d.status === 'dispensing' || d.status === 'enroute'; }).length;
+    var onShift = S.drivers().filter(function (d) { return ON_SHIFT[d.status]; }).length;
+    var remaining = all.filter(function (d) { return d.status !== 'complete'; }).length;
+    var openAlerts = S.alerts().length;
+    $('disp-kpis').innerHTML =
+      kpi(I.route, active, 'Active deliveries', 'dispensing &amp; en route', false) +
+      kpi(I.copilot, onShift, 'Drivers on shift', 'of ' + S.drivers().length + ' on the roster', false) +
+      kpi(I.board, remaining, 'Stops remaining', 'before the night closes out', false) +
+      kpi(I.shield, openAlerts, 'Open alerts', 'need attention', true);
+  }
+  function renderDispBoard() {
+    var ds = S.deliveriesFor({}).filter(function (d) { return d.status !== 'complete'; });
+    var live = ds.filter(function (d) { return d.status === 'dispensing'; }).length;
+    $('disp-sub').textContent = live + ' dispensing now · ' + ds.length + ' stops open';
+    $('disp-tbl').innerHTML =
+      '<thead><tr><th>Driver</th><th>Customer</th><th>Vehicle</th><th>Fuel</th><th class="r">Gallons</th><th>Window</th><th>Status</th></tr></thead><tbody>' +
+      (ds.length ? ds.map(function (d) {
+        var v = veh(d.vehicleId), c = S.customer(d.customerId), drv = S.driver(d.driverId);
+        var g = d.status === 'dispensing' ? S.deliveredGallons(d) : d.gallons;
+        return '<tr><td><div class="cell-2"><b>' + drv.name + '</b><span>' + (drv.truckId || '—') + '</span></div></td>' +
+          '<td><div class="cell-2"><b>' + c.name + '</b><span>' + d.addr + '</span></div></td>' +
+          '<td><div class="cell-2"><b>' + v.name + '</b><span class="mono" style="font-size:.74rem">' + v.plate + '</span></div></td>' +
+          '<td>' + ftag(v.fuel) + '</td><td class="r num">' + g + '</td><td>' + d.window + '</td>' +
+          '<td>' + statusPill(d) + '</td></tr>';
+      }).join('') : '<tr><td colspan="7" class="empty">All stops complete — night closed out.</td></tr>') + '</tbody>';
+  }
+  function renderDispAlerts() {
+    var a = S.alerts();
+    $('disp-alert-sub').textContent = a.length + ' open';
+    $('disp-alerts').innerHTML = a.length ? a.map(function (x) {
+      return '<div class="alert ' + x.sev + '"><span class="a-dot"></span><div><b>' + x.kind + '</b>' +
+        '<p>' + x.detail + '</p></div><span class="a-when">' + x.when + '</span></div>';
+    }).join('') : '<div class="empty">No open alerts.</div>';
+  }
+
+  /* ============ FLEET ============ */
+  function renderDrivers() {
+    var ds = S.drivers();
+    var onShift = ds.filter(function (d) { return ON_SHIFT[d.status]; }).length;
+    $('drv-sub').textContent = onShift + ' on shift · ' + ds.length + ' on roster';
+    $('drv-tbl').innerHTML =
+      '<thead><tr><th>Driver</th><th>Status</th><th>Truck</th><th>Route</th><th>Stops</th><th>Shift start</th></tr></thead><tbody>' +
+      ds.map(function (d) {
+        var stops = d.stopsTotal ? d.stopsDone + ' / ' + d.stopsTotal : '—';
+        return '<tr><td><b>' + d.name + '</b></td><td>' + drvPill(d.status) + '</td>' +
+          '<td class="mono">' + (d.truckId || '—') + '</td><td>' + (d.routeId || '—') + '</td>' +
+          '<td class="num">' + stops + '</td><td class="mono">' + (d.shiftStart || '—') + '</td></tr>';
+      }).join('') + '</tbody>';
+  }
+  function invCell(grade, gal) {
+    return '<div class="inv-cell">' + ftag(grade) + '<span class="mono">' + gal + ' gal</span></div>';
+  }
+  function renderTankers() {
+    var ts = S.tankers();
+    $('tkr-tbl').innerHTML =
+      '<thead><tr><th>Tanker</th><th>Status</th><th style="min-width:160px">Battery</th><th>On-board inventory</th></tr></thead><tbody>' +
+      ts.map(function (t) {
+        var inv = t.inventory;
+        return '<tr><td><b>' + t.name + '</b><div class="mono" style="font-size:.74rem;color:var(--fg-3)">' + t.id + '</div></td>' +
+          '<td>' + tkrPill(t.status) + '</td>' +
+          '<td><div class="gauge-row"><span class="gl">' + pct(t.battery) + '</span>' +
+            '<div class="bar mono"><span style="width:' + (t.battery * 100) + '%"></span></div></div></td>' +
+          '<td><div class="inv-grid">' +
+            invCell('diesel', inv.diesel) + invCell('regular', inv.regular) +
+            invCell('premium', inv.premium) + invCell('def', inv.def) +
+          '</div></td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  /* ============ MAPS (real Leaflet) ============ */
+  var dispMap = null, terrMap = null, truckMarkers = {};
+  function mapFail(id) { var e = document.getElementById(id); if (e) e.innerHTML = '<div class="empty">Map unavailable offline.</div>'; }
+
+  function buildDispatchMap() {
+    if (typeof L === 'undefined' || !window.StaFullMap) return mapFail('disp-map');
+    dispMap = StaFullMap.create('disp-map', { center: [32.83, -96.93], zoom: 10 });
+    StaFullMap.pin(dispMap, SEED.depot.lat, SEED.depot.lng, { kind: 'depot', label: 'Depot', color: '#9a9a9a', title: 'DFW depot' });
+    var seen = {};
+    S.deliveriesFor({}).forEach(function (d) {
+      if (d.status === 'complete' || seen[d.customerId]) return;
+      var g = SEED.geo[d.customerId]; if (!g) return;
+      seen[d.customerId] = true;
+      StaFullMap.pin(dispMap, g.lat, g.lng, { kind: 'stop', color: '#e0e0e0', title: S.customer(d.customerId).name });
+    });
+    S.tankers().forEach(function (t) {
+      var p = SEED.tankerPos[t.id]; if (!p) return;
+      var live = t.status === 'On route';
+      var m = StaFullMap.pin(dispMap, p.lat, p.lng, { kind: 'truck', label: t.id, color: live ? '#06b6d4' : '#9a9a9a', live: live, title: t.name + ' · ' + t.status });
+      truckMarkers[t.id] = { marker: m, lat: p.lat, lng: p.lng };
+    });
+    var pts = Object.keys(SEED.geo).map(function (k) { return [SEED.geo[k].lat, SEED.geo[k].lng]; });
+    pts.push([SEED.depot.lat, SEED.depot.lng]);
+    StaFullMap.fit(dispMap, pts, 45);
+  }
+  function moveTrucks() {
+    if (!dispMap) return;
+    S.tankers().forEach(function (t) {
+      var tm = truckMarkers[t.id]; if (!tm) return;
+      var drv = S.drivers().filter(function (d) { return d.truckId === t.id; })[0]; if (!drv) return;
+      var del = S.deliveriesFor({ driverId: drv.id }).filter(function (d) { return d.status === 'dispensing' || d.status === 'enroute'; })[0];
+      if (!del) return;
+      var g = SEED.geo[del.customerId]; if (!g) return;
+      tm.lat += (g.lat - tm.lat) * 0.12; tm.lng += (g.lng - tm.lng) * 0.12;
+      tm.marker.setLatLng([tm.lat, tm.lng]);
+    });
+  }
+  function buildTerritoryMap() {
+    if (typeof L === 'undefined' || !window.StaFullMap) return mapFail('terr-map');
+    terrMap = StaFullMap.create('terr-map', { center: [32.83, -96.95], zoom: 9 });
+    StaFullMap.pin(terrMap, SEED.depot.lat, SEED.depot.lng, { kind: 'depot', label: 'Depot', color: '#9a9a9a' });
+    var pts = [];
+    S.customers().forEach(function (c) {
+      var g = SEED.geo[c.id]; if (!g) return;
+      StaFullMap.pin(terrMap, g.lat, g.lng, { kind: 'city', title: c.name });
+      pts.push([g.lat, g.lng]);
+    });
+    StaFullMap.fit(terrMap, pts, 45);
+  }
+  /* re-size maps when their (previously hidden) view is shown */
+  document.addEventListener('click', function (e) {
+    var nv = e.target.closest('.nv'); if (!nv) return;
+    var v = nv.dataset.view;
+    setTimeout(function () {
+      if (v === 'territory' && terrMap) terrMap.invalidateSize();
+      if (v === 'dispatch' && dispMap) dispMap.invalidateSize();
+    }, 90);
+  });
+
+  /* ============ TERRITORY (text) ============ */
+  function renderTerritoryStats() {
+    $('terr-stats').innerHTML =
+      '<div class="stat-inline">' +
+        '<div class="si"><b>' + fr.customers + '</b><span>accounts on book</span></div>' +
+        '<div class="si"><b>' + fr.activeVehicles.toLocaleString() + '</b><span>active vehicles</span></div>' +
+        '<div class="si"><b>' + pct(fr.uptime) + '</b><span>service uptime</span></div>' +
+      '</div>' +
+      '<div class="divider"></div>' +
+      '<div class="dc-rows" style="margin-top:0">' +
+        '<div class="dc-row"><span>Region</span><span class="mono">' + fr.region + '</span></div>' +
+        '<div class="dc-row"><span>Franchise owner</span><span class="mono">' + fr.owner + '</span></div>' +
+        '<div class="dc-row"><span>Opened</span><span class="mono">' + fr.opened + '</span></div>' +
+        '<div class="dc-row"><span>Compliance score</span><span class="mono">' + fr.complianceScore + ' / 100</span></div>' +
+      '</div>';
+  }
+  function renderTerritoryCustomers() {
+    var cs = S.customers();
+    $('terr-cust-sub').textContent = cs.length + ' accounts';
+    $('terr-tbl').innerHTML =
+      '<thead><tr><th>Account</th><th>Type</th><th>Plan</th><th>Since</th><th class="r">Saved to date</th></tr></thead><tbody>' +
+      cs.map(function (c) {
+        return '<tr><td><b>' + c.name + '</b></td><td>' + typePill(c.type) + '</td>' +
+          '<td>' + c.plan + '</td><td class="mono">' + c.since + '</td>' +
+          '<td class="r num">' + money2(c.savingsToDate) + '</td></tr>';
+      }).join('') + '</tbody>';
+  }
+
+  /* ============ P&L ============ */
+  function renderPnlKpis() {
+    var p = S.pnl();
+    $('pnl-kpis').innerHTML =
+      kpi(I.chart, money(fr.mrr), 'MRR', 'recurring this month', false) +
+      kpi(I.truck, fr.gallonsMTD.toLocaleString(), 'Gallons MTD', 'delivered this month', false) +
+      kpi(I.receipt, money(fr.royaltyMTD), 'Royalty to HQ', '6% of revenue', true) +
+      kpi(I.board, money(p.netProfit), 'Net profit', 'month-to-date', false);
+  }
+  function renderPnlStatement() {
+    var p = S.pnl();
+    function line(label, val, neg) {
+      return '<tr><td>' + label + '</td><td class="r num' + (neg ? ' neg' : '') + '">' + (neg ? '− ' : '') + money2(val) + '</td></tr>';
+    }
+    $('pnl-tbl').innerHTML =
+      '<thead><tr><th>Line item</th><th class="r">Amount</th></tr></thead><tbody>' +
+        line('Revenue', p.revenue, false) +
+        line('Fuel COGS', p.cogsFuel, true) +
+        '<tr><td><b>Gross profit</b></td><td class="r num"><b>' + money2(p.grossProfit) + '</b></td></tr>' +
+        line('Labor &amp; ops', p.laborOps, true) +
+        '<tr><td>Truck lease <span class="muted" style="font-size:.78rem">(3 × $600)</span></td><td class="r num neg">− ' + money2(p.truckLease) + '</td></tr>' +
+        '<tr><td>Royalty to HQ <span class="muted" style="font-size:.78rem">(6%)</span></td><td class="r num neg">− ' + money2(p.royaltyToHQ) + '</td></tr>' +
+        '<tr><td>Brand fee <span class="muted" style="font-size:.78rem">(1%)</span></td><td class="r num neg">− ' + money2(p.brandFee) + '</td></tr>' +
+        line('Other', p.other, true) +
+        '<tr class="pnl-emph"><td><b>Net profit</b></td><td class="r num"><b>' + money2(p.netProfit) + '</b></td></tr>' +
+      '</tbody>';
+  }
+
+  /* ---- render all + live subscribe ---- */
+  function renderStatic() {
+    renderDrivers(); renderTankers();
+    renderTerritoryStats(); renderTerritoryCustomers();
+    renderPnlKpis(); renderPnlStatement();
+  }
+  function renderLiveBits() {
+    renderDispKpis(); renderDispBoard(); renderDispAlerts();
+  }
+  renderStatic(); renderLiveBits();
+  buildDispatchMap(); buildTerritoryMap();
+  S.subscribe(function () {
+    renderLiveBits();
+    renderDrivers(); renderTankers();
+    moveTrucks();
+  });
+})();
+</script>
+</body>
+</html>

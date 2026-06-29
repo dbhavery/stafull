@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver Co-Pilot — StaFull</title>
+<meta name="description" content="StaFull Driver Co-Pilot demo — shift, route, guided deliver-and-verify, and truck check.">
+<meta name="theme-color" content="#08080a">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  /* page-specific: minimal — guided check rows + numbered route stops + route line */
+  .chk { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .chk:last-child { border-bottom: 0; }
+  .chk .ck { width: 26px; height: 26px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    background: rgba(163,0,0,.18); border: 1px solid rgba(163,0,0,.45); color: var(--fg); }
+  .chk .ck svg { width: 15px; height: 15px; }
+  .chk .ck.idle { background: rgba(255,255,255,.04); border-color: var(--line-2); }
+  .chk .c-main { flex: 1; min-width: 0; }
+  .chk .c-main b { display: block; font-size: .9rem; color: var(--fg); font-weight: 600; }
+  .chk .c-main span { font-size: .78rem; color: var(--fg-3); }
+  .stop { display: flex; align-items: center; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+  .stop:last-child { border-bottom: 0; }
+  .stop .s-no { width: 30px; height: 30px; border-radius: 9px; flex: none; display: grid; place-items: center;
+    font-family: var(--mono); font-size: .82rem; font-weight: 700; color: var(--fg);
+    background: rgba(255,255,255,.04); border: 1px solid var(--line-2); }
+  .stop.current .s-no { background: rgba(163,0,0,.2); border-color: rgba(163,0,0,.5); }
+  .stop .s-main { flex: 1; min-width: 0; }
+  .stop .s-main b { display: block; font-size: .92rem; color: var(--fg); font-weight: 600; }
+  .stop .s-main span { font-size: .8rem; color: var(--fg-3); }
+  .stop .s-end { margin-left: auto; text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+  .stop .s-end .mono { font-family: var(--mono); color: var(--fg); font-size: .85rem; }
+  .route-line { padding: 4px 6px 18px; }
+  .route-line svg { width: 100%; height: 46px; display: block; }
+  .inv-row { display: flex; align-items: center; gap: 12px; margin-bottom: 13px; }
+  .inv-row:last-child { margin-bottom: 0; }
+  .inv-row .bar { flex: 1; }
+  .inv-row .il { width: 76px; color: var(--fg); font-size: .86rem; font-weight: 600; }
+  .inv-row .iv { min-width: 88px; text-align: right; font-family: var(--mono); color: var(--fg); font-size: .85rem; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="app-side" id="app-side"></aside>
+  <div class="app-main">
+    <header class="app-top" id="app-top"></header>
+    <div class="app-content">
+
+      <!-- MY SHIFT -->
+      <section class="view" id="view-shift" data-title="My Shift">
+        <div class="kpis" id="drv-kpis"></div>
+        <div class="cols cols-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Pre-trip checklist</h3><span class="ph-sub">All items passed</span></div>
+            <div class="panel-body" id="pretrip-body"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Current shift</h3></div>
+            <div class="panel-body" id="shift-body"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ROUTE -->
+      <section class="view" id="view-route" data-title="Route">
+        <div class="view-head"><h2>Tonight's route</h2><p>Your stops in order. The co-pilot promotes the next stop automatically as each fill completes and verifies.</p></div>
+        <div class="panel">
+          <div class="panel-head"><h3>Route R-1 · 4 stops</h3><span class="ph-sub" id="route-sub">—</span></div>
+          <div class="panel-body flush">
+            <div class="route-line" id="route-line"></div>
+            <div style="padding:0 18px 6px" id="route-stops"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- DELIVER & VERIFY -->
+      <section class="view" id="view-deliver" data-title="Deliver & Verify">
+        <div class="view-head"><h2>Deliver &amp; verify</h2><p>The co-pilot confirms vehicle, plate and grade before a drop flows — then meters the fill live and logs the savings against the local pump.</p></div>
+        <div class="cols cols-2-1">
+          <div class="panel">
+            <div class="panel-head"><h3>Verification</h3><span class="ph-sub" id="ver-sub">—</span></div>
+            <div class="panel-body" id="ver-body"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Live dispense</h3></div>
+            <div class="panel-body" id="disp-body"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRUCK CHECK -->
+      <section class="view" id="view-truck" data-title="Truck Check">
+        <div class="view-head"><h2>Truck check</h2><p>Battery, status and onboard inventory for your tanker. Grades are metered separately so the co-pilot can verify each drop.</p></div>
+        <div class="cols cols-2-1">
+          <div class="panel">
+            <div class="panel-head"><h3>Onboard inventory</h3><span class="ph-sub" id="truck-id">—</span></div>
+            <div class="panel-body" id="inv-body"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Status</h3></div>
+            <div class="panel-body" id="truck-status"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="mode.js"></script>
+<script src="seed.js"></script>
+<script src="store.js"></script>
+<script src="ui.js"></script>
+<script>
+(function () {
+  var S = window.StaFullStore;
+  var app = StaFullApp.mount({ role: 'driver', active: 'shift' });
+  var drv = S.currentDriver();
+  var $ = function (id) { return document.getElementById(id); };
+  var ICONS = StaFullApp.icons;
+  var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12l4 4 10-10"/></svg>';
+
+  function money(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function ftag(grade) { return '<span class="ftag ftag-' + grade + '">' + S.fuel(grade).label + '</span>'; }
+  function veh(id) { return S.vehicle(id); }
+  function statusPill(d) {
+    if (d.status === 'dispensing') return '<span class="pill live"><span class="pd"></span>Dispensing ' + Math.round(d.pct) + '%</span>';
+    if (d.status === 'enroute')    return '<span class="pill info"><span class="pd"></span>En route</span>';
+    if (d.status === 'scheduled')  return '<span class="pill warn"><span class="pd"></span>Scheduled</span>';
+    if (d.status === 'flagged')    return '<span class="pill flag"><span class="pd"></span>Held · re-verify</span>';
+    return '<span class="pill ok"><span class="pd"></span>Complete</span>';
+  }
+  function kpi(icon, val, label, sub, red) {
+    return '<div class="kpi"><div class="k-label"><span class="ic' + (red ? ' red' : '') + '">' + icon + '</span>' + label + '</div>' +
+           '<div class="k-val">' + val + '</div><div class="k-sub">' + sub + '</div></div>';
+  }
+
+  /* driver's stops in route order */
+  function myStops() {
+    var rt = S.routeFor(drv.id) || { stops: [] };
+    return rt.stops.map(function (id) { return S.delivery(id); }).filter(Boolean);
+  }
+  function activeDelivery() {
+    var ds = S.deliveriesFor({ driverId: drv.id });
+    return ds.filter(function (d) { return d.status === 'dispensing'; })[0] ||
+           ds.filter(function (d) { return d.status === 'enroute'; })[0] ||
+           ds.filter(function (d) { return d.status === 'scheduled'; })[0] || null;
+  }
+  function tonightGallons() {
+    return S.deliveriesFor({ driverId: drv.id }).reduce(function (a, d) {
+      if (d.status === 'complete') return a + d.gallons;
+      if (d.status === 'dispensing') return a + S.deliveredGallons(d);
+      return a;
+    }, 0);
+  }
+  function tonightSaved() {
+    return S.deliveriesFor({ driverId: drv.id }).reduce(function (a, d) {
+      if (d.status === 'complete') return a + d.savings;
+      if (d.status === 'dispensing') return a + S.liveSavings(d);
+      return a;
+    }, 0);
+  }
+
+  /* ---- nav buttons inside content ---- */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-goto]'); if (b) app.show(b.dataset.goto);
+  });
+
+  /* ---- shift ---- */
+  function renderKpis() {
+    var t = S.tanker(drv.truckId) || { battery: 0 };
+    $('drv-kpis').innerHTML =
+      kpi(ICONS.route, drv.stopsDone + '/' + drv.stopsTotal, 'Stops complete', 'on tonight’s run', false) +
+      kpi(ICONS.gauge, Math.round(tonightGallons()).toLocaleString() + ' gal', 'Delivered tonight', 'metered &amp; verified', false) +
+      kpi(ICONS.shield, money(tonightSaved()), 'Saved for customers', 'vs. the local pump', false) +
+      kpi(ICONS.truck, Math.round(t.battery * 100) + '%', 'Truck battery', drv.truckId + ' · on route', true);
+  }
+  var PRETRIP = [
+    { t: 'Vehicle walkaround', s: 'Tires, lights, leaks — clear' },
+    { t: 'Grounding strap & bonding', s: 'Continuity verified' },
+    { t: 'Overfill interlock test', s: 'Auto-shutoff armed' },
+    { t: 'Meter calibration seal', s: 'Seal intact · cert current' },
+    { t: 'Spill kit & extinguisher', s: 'Stocked & in date' },
+    { t: 'E-signature: T. Alvarez', s: 'Signed 8:10 PM' }
+  ];
+  function renderPretrip() {
+    $('pretrip-body').innerHTML = PRETRIP.map(function (c) {
+      return '<div class="chk"><span class="ck">' + CHECK + '</span>' +
+        '<div class="c-main"><b>' + c.t + '</b><span>' + c.s + '</span></div>' +
+        '<span class="pill ok"><span class="pd"></span>Passed</span></div>';
+    }).join('');
+  }
+  function renderShift() {
+    var t = S.tanker(drv.truckId) || {};
+    var a = activeDelivery();
+    var aHtml;
+    if (a) {
+      var v = veh(a.vehicleId);
+      aHtml =
+        '<div class="row" style="border:0;padding:0">' +
+          '<div class="r-ic red">' + ICONS.shield + '</div>' +
+          '<div class="r-main"><b>' + v.name + ' · ' + v.model + '</b><span>' + v.plate + ' · ' + a.addr + '</span></div>' +
+          '<div class="r-end">' + statusPill(a) + '<small>' + S.fuel(a.fuel).label + ' · ' + a.gallons + ' gal</small></div>' +
+        '</div>';
+    } else {
+      aHtml = '<div class="empty">No active stop — route complete.</div>';
+    }
+    $('shift-body').innerHTML =
+      '<div class="stat-inline" style="margin-bottom:16px">' +
+        '<div class="si"><b>' + drv.truckId + '</b><span>tanker assigned</span></div>' +
+        '<div class="si"><b>' + drv.shiftStart + '</b><span>shift start</span></div>' +
+        '<div class="si"><b>' + Math.round((t.battery || 0) * 100) + '%</b><span>battery</span></div>' +
+      '</div>' +
+      '<div style="margin:4px 0 14px"><span class="pill live"><span class="pd"></span>On shift · ' + drv.status + '</span></div>' +
+      '<div class="divider"></div>' +
+      '<div class="muted" style="font-size:.78rem;margin-bottom:10px">Active stop</div>' + aHtml;
+  }
+
+  /* ---- route ---- */
+  function renderRouteLine() {
+    var stops = myStops();
+    var n = stops.length || 1;
+    var W = 1000, cy = 23, padX = 30;
+    var step = (W - padX * 2) / (n - 1 || 1);
+    var line = '<svg viewBox="0 0 ' + W + ' 46" preserveAspectRatio="none" aria-hidden="true">';
+    line += '<line x1="' + padX + '" y1="' + cy + '" x2="' + (W - padX) + '" y2="' + cy + '" stroke="rgba(255,255,255,.12)" stroke-width="2"/>';
+    // progress segment up to current/last-complete
+    var currIdx = 0;
+    stops.forEach(function (d, i) { if (d.status === 'complete' || d.status === 'dispensing') currIdx = i; });
+    line += '<line x1="' + padX + '" y1="' + cy + '" x2="' + (padX + step * currIdx) + '" y2="' + cy + '" stroke="#a30000" stroke-width="2"/>';
+    stops.forEach(function (d, i) {
+      var x = padX + step * i;
+      var current = d.status === 'dispensing';
+      if (current) {
+        line += '<circle cx="' + x + '" cy="' + cy + '" r="9" fill="rgba(163,0,0,.25)"/>';
+        line += '<circle cx="' + x + '" cy="' + cy + '" r="5.5" fill="#a30000"/>';
+      } else if (d.status === 'complete') {
+        line += '<circle cx="' + x + '" cy="' + cy + '" r="5" fill="rgba(246,246,248,.6)"/>';
+      } else {
+        line += '<circle cx="' + x + '" cy="' + cy + '" r="5" fill="#0e0e11" stroke="rgba(255,255,255,.3)" stroke-width="1.6"/>';
+      }
+      line += '<text x="' + x + '" y="42" fill="rgba(246,246,248,.46)" font-size="11" font-family="JetBrains Mono, monospace" text-anchor="middle">' + (i + 1) + '</text>';
+    });
+    line += '</svg>';
+    $('route-line').innerHTML = line;
+  }
+  function renderRouteStops() {
+    var stops = myStops();
+    var done = stops.filter(function (d) { return d.status === 'complete'; }).length;
+    $('route-sub').textContent = done + ' of ' + stops.length + ' complete';
+    $('route-stops').innerHTML = stops.map(function (d, i) {
+      var v = veh(d.vehicleId), c = S.customer(d.customerId) || {};
+      var current = d.status === 'dispensing';
+      return '<div class="stop' + (current ? ' current' : '') + '">' +
+        '<span class="s-no">' + (i + 1) + '</span>' +
+        '<div class="s-main"><b>' + (c.name || v.name) + '</b>' +
+          '<span>' + v.name + ' · ' + v.plate + ' · ' + d.addr + '</span></div>' +
+        '<div class="s-end">' + statusPill(d) +
+          '<span class="mono">' + ftag(d.fuel).replace(/<[^>]+>/g, '') + ' · ' + d.gallons + ' gal · ' + d.window + '</span></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ---- deliver & verify ---- */
+  function verRow(label, sub, ok) {
+    return '<div class="chk"><span class="ck' + (ok ? '' : ' idle') + '">' + CHECK + '</span>' +
+      '<div class="c-main"><b>' + label + '</b><span>' + sub + '</span></div>' +
+      (ok ? '<span class="pill ok"><span class="pd"></span>Confirmed</span>' : '<span class="pill muted"><span class="pd"></span>Pending</span>') + '</div>';
+  }
+  function renderDeliver() {
+    var d = S.deliveriesFor({ driverId: drv.id }).filter(function (x) { return x.status === 'dispensing'; })[0];
+    var verB = $('ver-body'), dispB = $('disp-body'), verSub = $('ver-sub');
+    if (!d) {
+      verSub.textContent = '—';
+      verB.innerHTML = '<div class="empty">No fill in progress. Advance to your next stop.</div>';
+      dispB.innerHTML = '<div class="empty">Idle.</div>';
+      return;
+    }
+    var v = veh(d.vehicleId), ok = d.verified;
+    verSub.textContent = v.name + ' · ' + d.window;
+    verB.innerHTML =
+      verRow('Vehicle match', v.name + ' · ' + v.model, ok) +
+      verRow('License plate (' + v.plate + ')', 'Tag scan matched on file', ok) +
+      verRow('Fuel-type match — ' + S.fuel(d.fuel).label, 'Nozzle grade confirmed', ok) +
+      verRow('Overfill interlock', 'Auto-shutoff armed', ok) +
+      verRow('Grounding', 'Bond verified before flow', ok);
+
+    var live = d.status === 'dispensing';
+    dispB.innerHTML =
+      '<div class="row" style="border:0;padding:0 0 14px">' +
+        '<div class="r-ic red">' + ICONS.truck + '</div>' +
+        '<div class="r-main"><b>' + v.name + '</b><span>' + v.plate + ' · ' + d.addr + '</span></div>' +
+        '<div class="r-end">' + statusPill(d) + '<small>' + S.fuel(d.fuel).label + ' · ' + d.gallons + ' gal target</small></div>' +
+      '</div>' +
+      '<div class="gauge-row" style="margin:6px 0 16px"><span class="gl">' + Math.round(d.pct) + '%</span>' +
+        '<div class="bar"><span style="width:' + d.pct + '%"></span></div></div>' +
+      '<div class="stat-inline" style="margin-bottom:16px">' +
+        '<div class="si"><b>' + S.deliveredGallons(d) + '</b><span>gal delivered</span></div>' +
+        '<div class="si"><b>' + money(S.liveSavings(d)) + '</b><span>saved so far</span></div>' +
+      '</div>' +
+      '<div class="dc-rows" style="margin-bottom:18px">' +
+        '<div class="row" style="padding:9px 14px"><div class="r-main"><span>Pump price</span></div><div class="r-end"><span class="mono">' + money(S.fuel(d.fuel).pump) + '/gal</span></div></div>' +
+        '<div class="row" style="padding:9px 14px"><div class="r-main"><span>Your price</span></div><div class="r-end"><span class="mono">' + money(S.fuel(d.fuel).ours) + '/gal</span></div></div>' +
+      '</div>' +
+      '<button class="btn btn-red" id="drv-complete"' + (d.pct < 100 ? '' : ' disabled') + ' style="width:100%;justify-content:center">Complete &amp; log fill</button>';
+
+    var btn = $('drv-complete');
+    if (btn) btn.addEventListener('click', function () { completeFill(d); });
+  }
+  function completeFill(d) {
+    d.pct = 100; d.status = 'complete'; d.verified = true;
+    // promote next stop on this driver's route to dispensing (mirrors store tick)
+    var rt = S.routeFor(drv.id);
+    if (rt) {
+      for (var i = 0; i < rt.stops.length; i++) {
+        var nxt = S.delivery(rt.stops[i]);
+        if (nxt && (nxt.status === 'enroute' || nxt.status === 'scheduled')) { nxt.status = 'dispensing'; nxt.verified = true; break; }
+      }
+    }
+    if (drv.stopsDone < drv.stopsTotal) drv.stopsDone += 1;
+    toast('Fill logged — ' + (veh(d.vehicleId) || {}).name);
+    renderLiveBits();
+  }
+  function toast(msg) {
+    var t = document.querySelector('.toast');
+    if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.setAttribute('aria-live', 'polite'); document.body.appendChild(t); }
+    t.innerHTML = '<span class="tk"></span>' + msg; t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+
+  /* ---- truck check ---- */
+  var CAPS = { diesel: 1500, regular: 1500, premium: 600, def: 240 };
+  function invRow(grade) {
+    var t = S.tanker(drv.truckId);
+    var gal = (t.inventory && t.inventory[grade]) || 0;
+    var cap = CAPS[grade] || 1500;
+    var w = Math.min(100, Math.round(gal / cap * 100));
+    return '<div class="inv-row"><span class="il">' + S.fuel(grade).label + '</span>' +
+      '<div class="bar"><span style="width:' + w + '%"></span></div>' +
+      '<span class="iv">' + gal.toLocaleString() + ' / ' + cap.toLocaleString() + '</span></div>';
+  }
+  function renderTruck() {
+    var t = S.tanker(drv.truckId) || { inventory: {}, battery: 0, status: '' };
+    $('truck-id').textContent = t.id + ' · ' + t.name;
+    $('inv-body').innerHTML =
+      invRow('diesel') + invRow('regular') + invRow('premium') + invRow('def') +
+      '<div class="divider"></div>' +
+      '<div class="muted" style="font-size:.8rem">Grades are metered and verified independently — the co-pilot blocks a drop if the scanned nozzle grade doesn’t match the vehicle on file.</div>';
+    $('truck-status').innerHTML =
+      '<div class="gauge-row" style="margin-bottom:18px"><span class="gl">' + Math.round(t.battery * 100) + '%</span>' +
+        '<div class="bar' + (t.battery < 0.25 ? ' low' : '') + '"><span style="width:' + (t.battery * 100) + '%"></span></div></div>' +
+      '<div style="margin-bottom:18px"><span class="pill live"><span class="pd"></span>' + t.status + '</span></div>' +
+      '<div class="rows">' +
+        '<div class="row"><div class="r-ic">' + ICONS.shield + '</div>' +
+          '<div class="r-main"><b>Calibration cert</b><span>Meter seal intact</span></div>' +
+          '<div class="r-end"><span class="pill ok"><span class="pd"></span>Valid</span></div></div>' +
+        '<div class="row"><div class="r-ic">' + ICONS.gauge + '</div>' +
+          '<div class="r-main"><b>Next resupply</b><span>DFW depot · top-off all grades</span></div>' +
+          '<div class="r-end"><span class="mono">After route</span></div></div>' +
+        '<div class="row"><div class="r-ic red">' + ICONS.truck + '</div>' +
+          '<div class="r-main"><b>Range remaining</b><span>EV tanker · est. on current charge</span></div>' +
+          '<div class="r-end"><span class="mono">~' + Math.round(t.battery * 210) + ' mi</span></div></div>' +
+      '</div>';
+  }
+
+  /* ---- render all + live subscribe ---- */
+  function renderStatic() { renderPretrip(); }
+  function renderLiveBits() {
+    renderKpis(); renderShift();
+    renderRouteLine(); renderRouteStops();
+    renderDeliver(); renderTruck();
+  }
+  renderStatic(); renderLiveBits();
+  S.subscribe(function () { renderLiveBits(); });
+})();
+</script>
+</body>
+</html>
