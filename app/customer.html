@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Customer portal — StaFull</title>
-<meta name="description" content="StaFull customer portal demo — vehicles, deliveries, savings and billing.">
+<title>Customer portal | StaFull</title>
+<meta name="description" content="StaFull customer portal demo: vehicles, deliveries, savings and billing.">
 <meta name="theme-color" content="#08080a">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/svg+xml" href="../logo.svg">
@@ -26,7 +26,7 @@
         <div class="kpis" id="cust-kpis"></div>
         <div class="cols cols-2-1">
           <div class="panel">
-            <div class="panel-head"><h3>Live delivery</h3><span class="ph-sub" id="live-sub">—</span></div>
+            <div class="panel-head"><h3>Live delivery</h3><span class="ph-sub" id="live-sub">-</span></div>
             <div class="panel-body" id="live-body"></div>
           </div>
           <div class="panel">
@@ -56,8 +56,8 @@
               <div class="fld"><label for="sch-veh">Vehicle</label><select id="sch-veh"></select></div>
               <div class="fld"><label for="sch-when">Window</label>
                 <select id="sch-when">
-                  <option>Tonight · 8–11 PM</option>
-                  <option>Tomorrow · 8–11 PM</option>
+                  <option>Tonight · 8 to 11 PM</option>
+                  <option>Tomorrow · 8 to 11 PM</option>
                   <option>This weekend</option>
                   <option>Next scheduled run</option>
                 </select>
@@ -75,7 +75,7 @@
 
       <!-- DELIVERIES -->
       <section class="view" id="view-deliveries" data-title="Deliveries">
-        <div class="view-head"><h2>Deliveries</h2><p>Every fill on your account — scheduled, in progress, and complete — each verified and logged with its savings against the local pump.</p></div>
+        <div class="view-head"><h2>Deliveries</h2><p>Every fill on your account (scheduled, in progress, and complete) each verified and logged with its savings against the local pump.</p></div>
         <div class="panel"><div class="panel-body flush"><table class="tbl" id="del-tbl"></table></div></div>
       </section>
 
@@ -139,7 +139,7 @@
     if (!d) {
       // fall back to next enroute/scheduled
       d = S.deliveriesFor({ customerId: cust.id }).filter(function (x) { return x.status === 'enroute' || x.status === 'scheduled'; })[0];
-      if (!d) { body.innerHTML = '<div class="empty">No active delivery right now.</div>'; sub.textContent = '—'; return; }
+      if (!d) { body.innerHTML = '<div class="empty">No active delivery right now.</div>'; sub.textContent = '-'; return; }
     }
     var v = veh(d.vehicleId);
     sub.textContent = d.window;
@@ -161,7 +161,7 @@
           '<div class="dc-row"><span>Verification</span><span class="dc-ok">' + (d.verified ? '✓ vehicle &amp; fuel-type confirmed' : 'pending') + '</span></div>' +
         '</div>'
         :
-        '<p class="muted" style="font-size:.9rem">Scheduled for ' + d.window + ' — ' + d.gallons + ' gal of ' + S.fuel(d.fuel).label + '. We’ll verify the vehicle and grade on arrival.</p>');
+        '<p class="muted" style="font-size:.9rem">Scheduled for ' + d.window + ': ' + d.gallons + ' gal of ' + S.fuel(d.fuel).label + '. We’ll verify the vehicle and grade on arrival.</p>');
   }
   function row2(a, b) { return '<div class="dc-row"><span>' + a + '</span><span class="mono">' + b + '</span></div>'; }
 
@@ -270,7 +270,7 @@
   $('sch-go').addEventListener('click', function () {
     var v = $('sch-veh').value, when = $('sch-when').value;
     S.scheduleFill(v, when);
-    toast('Delivery scheduled — ' + when.toLowerCase());
+    toast('Delivery scheduled: ' + when.toLowerCase());
     renderScheduleList(); renderNext(); renderDeliveries();
   });
   function toast(msg) {

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Driver Co-Pilot — StaFull</title>
-<meta name="description" content="StaFull Driver Co-Pilot demo — shift, route, guided deliver-and-verify, and truck check.">
+<title>Driver Co-Pilot | StaFull</title>
+<meta name="description" content="StaFull Driver Co-Pilot demo: shift, route, guided deliver-and-verify, and truck check.">
 <meta name="theme-color" content="#08080a">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/svg+xml" href="../logo.svg">
@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="../styles.css">
 <link rel="stylesheet" href="app.css">
 <style>
-  /* page-specific: minimal — guided check rows + numbered route stops + route line */
+  /* page-specific: minimal, guided check rows + numbered route stops + route line */
   .chk { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
   .chk:last-child { border-bottom: 0; }
   .chk .ck { width: 26px; height: 26px; border-radius: 50%; flex: none; display: grid; place-items: center;
@@ -68,9 +68,9 @@
 
       <!-- ROUTE -->
       <section class="view" id="view-route" data-title="Route">
-        <div class="view-head"><h2>Tonight's route</h2><p>Your stops in order. The co-pilot promotes the next stop automatically as each fill completes and verifies.</p></div>
+        <div class="view-head"><h2>Tonight's route</h2><p>Your stops in order. The next stop moves up when each fill is completed.</p></div>
         <div class="panel">
-          <div class="panel-head"><h3>Route R-1 · 4 stops</h3><span class="ph-sub" id="route-sub">—</span></div>
+          <div class="panel-head"><h3>Route R-1 · 4 stops</h3><span class="ph-sub" id="route-sub">-</span></div>
           <div class="panel-body flush">
             <div class="route-line" id="route-line"></div>
             <div style="padding:0 18px 6px" id="route-stops"></div>
@@ -80,10 +80,10 @@
 
       <!-- DELIVER & VERIFY -->
       <section class="view" id="view-deliver" data-title="Deliver & Verify">
-        <div class="view-head"><h2>Deliver &amp; verify</h2><p>The co-pilot confirms vehicle, plate and grade before a drop flows — then meters the fill live and logs the savings against the local pump.</p></div>
+        <div class="view-head"><h2>Deliver &amp; verify</h2><p>Check the vehicle, plate and grade before fueling, then meter the fill and log the savings against the local pump.</p></div>
         <div class="cols cols-2-1">
           <div class="panel">
-            <div class="panel-head"><h3>Verification</h3><span class="ph-sub" id="ver-sub">—</span></div>
+            <div class="panel-head"><h3>Verification</h3><span class="ph-sub" id="ver-sub">-</span></div>
             <div class="panel-body" id="ver-body"></div>
           </div>
           <div class="panel">
@@ -95,10 +95,10 @@
 
       <!-- TRUCK CHECK -->
       <section class="view" id="view-truck" data-title="Truck Check">
-        <div class="view-head"><h2>Truck check</h2><p>Battery, status and onboard inventory for your tanker. Grades are metered separately so the co-pilot can verify each drop.</p></div>
+        <div class="view-head"><h2>Truck check</h2><p>Battery, status and onboard inventory for your tanker. Grades are metered separately so each drop can be checked by grade.</p></div>
         <div class="cols cols-2-1">
           <div class="panel">
-            <div class="panel-head"><h3>Onboard inventory</h3><span class="ph-sub" id="truck-id">—</span></div>
+            <div class="panel-head"><h3>Onboard inventory</h3><span class="ph-sub" id="truck-id">-</span></div>
             <div class="panel-body" id="inv-body"></div>
           </div>
           <div class="panel">
@@ -181,7 +181,7 @@
       kpi(ICONS.truck, Math.round(t.battery * 100) + '%', 'Truck battery', drv.truckId + ' · on route', true);
   }
   var PRETRIP = [
-    { t: 'Vehicle walkaround', s: 'Tires, lights, leaks — clear' },
+    { t: 'Vehicle walkaround', s: 'Tires, lights, leaks: clear' },
     { t: 'Grounding strap & bonding', s: 'Continuity verified' },
     { t: 'Overfill interlock test', s: 'Auto-shutoff armed' },
     { t: 'Meter calibration seal', s: 'Seal intact · cert current' },
@@ -208,7 +208,7 @@
           '<div class="r-end">' + statusPill(a) + '<small>' + S.fuel(a.fuel).label + ' · ' + a.gallons + ' gal</small></div>' +
         '</div>';
     } else {
-      aHtml = '<div class="empty">No active stop — route complete.</div>';
+      aHtml = '<div class="empty">No active stop, route complete.</div>';
     }
     $('shift-body').innerHTML =
       '<div class="stat-inline" style="margin-bottom:16px">' +
@@ -276,7 +276,7 @@
     var d = S.deliveriesFor({ driverId: drv.id }).filter(function (x) { return x.status === 'dispensing'; })[0];
     var verB = $('ver-body'), dispB = $('disp-body'), verSub = $('ver-sub');
     if (!d) {
-      verSub.textContent = '—';
+      verSub.textContent = '-';
       verB.innerHTML = '<div class="empty">No fill in progress. Advance to your next stop.</div>';
       dispB.innerHTML = '<div class="empty">Idle.</div>';
       return;
@@ -285,8 +285,8 @@
     verSub.textContent = v.name + ' · ' + d.window;
     verB.innerHTML =
       verRow('Vehicle match', v.name + ' · ' + v.model, ok) +
-      verRow('License plate (' + v.plate + ')', 'Tag scan matched on file', ok) +
-      verRow('Fuel-type match — ' + S.fuel(d.fuel).label, 'Nozzle grade confirmed', ok) +
+      verRow('License plate (' + v.plate + ')', 'Plate matches the account', ok) +
+      verRow('Fuel-type match: ' + S.fuel(d.fuel).label, 'Nozzle grade confirmed', ok) +
       verRow('Overfill interlock', 'Auto-shutoff armed', ok) +
       verRow('Grounding', 'Bond verified before flow', ok);
 
@@ -323,7 +323,7 @@
       }
     }
     if (drv.stopsDone < drv.stopsTotal) drv.stopsDone += 1;
-    toast('Fill logged — ' + (veh(d.vehicleId) || {}).name);
+    toast('Fill logged: ' + (veh(d.vehicleId) || {}).name);
     renderLiveBits();
   }
   function toast(msg) {
@@ -350,7 +350,7 @@
     $('inv-body').innerHTML =
       invRow('diesel') + invRow('regular') + invRow('premium') + invRow('def') +
       '<div class="divider"></div>' +
-      '<div class="muted" style="font-size:.8rem">Grades are metered and verified independently — the co-pilot blocks a drop if the scanned nozzle grade doesn’t match the vehicle on file.</div>';
+      '<div class="muted" style="font-size:.8rem">Grades are metered separately. Hold the fill if the nozzle grade does not match the vehicle on file.</div>';
     $('truck-status').innerHTML =
       '<div class="gauge-row" style="margin-bottom:18px"><span class="gl">' + Math.round(t.battery * 100) + '%</span>' +
         '<div class="bar' + (t.battery < 0.25 ? ' low' : '') + '"><span style="width:' + (t.battery * 100) + '%"></span></div></div>' +

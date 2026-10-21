@@ -1,12 +1,12 @@
 /* ======================================================================
-   StaFull — demo seed data (sample, simulated; pre-launch business).
+   StaFull, demo seed data (sample, simulated; pre-launch business).
    One DFW franchise is fully detailed; the rest of the network carries
    roll-up figures only. Everything downstream (store/ui) reads window.STAFULL_SEED.
-   No real customers exist yet — these are representative records.
+   No real customers exist yet, these are representative records.
    ====================================================================== */
 (function () {
 
-  /* fuel grades — monochrome UI, distinguished by label. Prices in $/gal. */
+  /* fuel grades, monochrome UI, distinguished by label. Prices in $/gal. */
   var FUELS = {
     diesel:  { label: 'Diesel',  pump: 3.94, ours: 3.79 },
     regular: { label: 'Regular', pump: 3.49, ours: 3.34 },
@@ -17,7 +17,7 @@
 
   /* ---- the network (HQ view): one detailed franchise + roll-ups ---- */
   var franchises = [
-    { id: 'dfw', name: 'StaFull DFW', region: 'Dallas–Fort Worth, TX', owner: 'Priya Raman',
+    { id: 'dfw', name: 'StaFull DFW', region: 'Dallas-Fort Worth, TX', owner: 'Priya Raman',
       opened: '2025-09', status: 'Active', detailed: true,
       royaltyRate: 0.06, brandFee: 0.01, techLeasePerTruck: 600,
       customers: 142, activeVehicles: 511, trucks: 3, drivers: 5,
@@ -48,7 +48,7 @@
     { market: 'Oklahoma City, OK', stage: 'Discovery',      candidate: 'OKC Mobility Group', value: 185000 },
     { market: 'Fort Worth (2nd), TX', stage: 'Application', candidate: 'B. Tran',           value: 185000 },
     { market: 'El Paso, TX',     stage: 'SBA underwriting',  candidate: 'Sun City Fuel Co.', value: 185000 },
-    { market: 'New Orleans, LA', stage: 'Signed — onboarding', candidate: 'Crescent Logistics', value: 210000 }
+    { market: 'New Orleans, LA', stage: 'Signed, onboarding', candidate: 'Crescent Logistics', value: 210000 }
   ];
 
   /* ---- DFW franchise detail ---- */
@@ -59,7 +59,7 @@
       inventory: { diesel: 920, regular: 1340, premium: 410, def: 180 } },
     { id: 'TKR-02', name: 'Tanker 02', battery: 0.54, status: 'On route',
       inventory: { diesel: 410, regular: 980, premium: 260, def: 40 } },
-    { id: 'TKR-07', name: 'Tanker 07', battery: 0.96, status: 'Depot — charging',
+    { id: 'TKR-07', name: 'Tanker 07', battery: 0.96, status: 'Depot, charging',
       inventory: { diesel: 1500, regular: 1500, premium: 600, def: 240 } }
   ];
 
@@ -72,7 +72,7 @@
     { id: 'DRV-5', name: 'M. Cole',    status: 'Available',   truckId: null,     routeId: null,  shiftStart: null,    stopsDone: 0, stopsTotal: 0 }
   ];
 
-  /* customers (DFW). currentCustomerId = the demo "you" — a multi-vehicle small business. */
+  /* customers (DFW). currentCustomerId = the demo "you", a multi-vehicle small business. */
   var customers = [
     { id: 'CUS-1', name: 'Lone Star HVAC',          type: 'COMMERCIAL', plan: 'Commercial · NET-30', terms: 'NET-30',
       since: '2025-10', savingsToDate: 4185.40, contact: 'ops@lonestarhvac.example' },
@@ -88,7 +88,7 @@
       since: '2025-11', savingsToDate: 9430.75, contact: 'depot@metroparcel.example' }
   ];
 
-  /* vehicles (by customer). level = current fuel fraction 0–1. */
+  /* vehicles (by customer). level = current fuel fraction 0 to 1. */
   var vehicles = [
     /* Lone Star HVAC (demo customer) */
     { id: 'VEH-1', customerId: 'CUS-1', name: 'Service Van 12', model: 'Ford Transit',  plate: 'LSH-1204', fuel: 'regular', tankCap: 25, level: 0.34 },
@@ -130,7 +130,7 @@
             fuel: 'diesel', gallons: 80, status: 'complete', pct: 100, verified: true, window: '7:50 PM', addr: 'Brightline depot · Dock 7' }),
     mkDel({ id: 'DEL-8', driverId: 'DRV-2', truckId: 'TKR-02', customerId: 'CUS-1', vehicleId: 'VEH-5',
             fuel: 'diesel', gallons: 13, status: 'flagged', pct: 0, verified: false, window: '9:55 PM', addr: 'Lone Star HVAC yard · Bay 2',
-            flag: 'Fuel-type mismatch on first scan — held for re-verify' }),
+            flag: 'Fuel-type mismatch on first scan, held for re-verify' }),
     mkDel({ id: 'DEL-9', driverId: 'DRV-1', truckId: 'TKR-04', customerId: 'CUS-1', vehicleId: 'VEH-4',
             fuel: 'diesel', gallons: 17, status: 'complete', pct: 100, verified: true, window: '7:30 PM', addr: 'Lone Star HVAC yard · Bay 2' }),
     mkDel({ id: 'DEL-10', driverId: 'DRV-1', truckId: 'TKR-04', customerId: 'CUS-1', vehicleId: 'VEH-2',
@@ -156,9 +156,9 @@
 
   /* alerts / compliance (franchise + HQ) */
   var alerts = [
-    { id: 'AL-1', sev: 'high', kind: 'Fuel-type mismatch', detail: 'DEL-8 · Box Truck 1 (Lone Star HVAC) — AI scan flagged diesel nozzle vs. tagged grade. Delivery held.', when: '9:51 PM', franchise: 'dfw' },
-    { id: 'AL-2', sev: 'med',  kind: 'Low inventory', detail: 'Tanker 02 · DEF at 40 gal — schedule resupply before next DEF stop.', when: '9:12 PM', franchise: 'dfw' },
-    { id: 'AL-3', sev: 'med',  kind: 'Missed window', detail: 'Brightline Tractor 214 — vehicle not accessible at scheduled fill (yard gate locked). Rescheduled to next run.', when: '6:38 PM', franchise: 'dfw' },
+    { id: 'AL-1', sev: 'high', kind: 'Fuel-type mismatch', detail: 'DEL-8 · Box Truck 1 (Lone Star HVAC), Driver check found a diesel nozzle vs. the tagged grade. Delivery held.', when: '9:51 PM', franchise: 'dfw' },
+    { id: 'AL-2', sev: 'med',  kind: 'Low inventory', detail: 'Tanker 02 · DEF at 40 gal, schedule resupply before next DEF stop.', when: '9:12 PM', franchise: 'dfw' },
+    { id: 'AL-3', sev: 'med',  kind: 'Missed window', detail: 'Brightline Tractor 214, vehicle not accessible at scheduled fill (yard gate locked). Rescheduled to next run.', when: '6:38 PM', franchise: 'dfw' },
     { id: 'AL-4', sev: 'low',  kind: 'Calibration due', detail: 'Tanker 07 meter calibration cert expires in 9 days.', when: 'Today', franchise: 'dfw' }
   ];
 
@@ -178,12 +178,12 @@
   /* real geo coordinates (DFW metro) for the live maps */
   var depot = { lat: 32.812, lng: -97.005, label: 'DFW depot' };
   var geo = {
-    'CUS-1': { lat: 32.912, lng: -96.638 }, // Lone Star HVAC — Garland
-    'CUS-2': { lat: 33.019, lng: -96.698 }, // Dana Whitfield — Plano
-    'CUS-3': { lat: 32.598, lng: -96.684 }, // Brightline depot — Wilmer/S. Dallas
-    'CUS-4': { lat: 32.755, lng: -97.331 }, // Cedar Ridge — Fort Worth
-    'CUS-5': { lat: 32.736, lng: -97.108 }, // Carlos Mendez — Arlington
-    'CUS-6': { lat: 32.814, lng: -96.949 }  // MetroParcel — Irving
+    'CUS-1': { lat: 32.912, lng: -96.638 }, // Lone Star HVAC, Garland
+    'CUS-2': { lat: 33.019, lng: -96.698 }, // Dana Whitfield, Plano
+    'CUS-3': { lat: 32.598, lng: -96.684 }, // Brightline depot, Wilmer/S. Dallas
+    'CUS-4': { lat: 32.755, lng: -97.331 }, // Cedar Ridge, Fort Worth
+    'CUS-5': { lat: 32.736, lng: -97.108 }, // Carlos Mendez, Arlington
+    'CUS-6': { lat: 32.814, lng: -96.949 }  // MetroParcel, Irving
   };
   var tankerPos = {
     'TKR-04': { lat: 32.905, lng: -96.648 }, // on route near Garland

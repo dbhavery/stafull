@@ -1,5 +1,5 @@
 /* ======================================================================
-   StaFull app shell — StaFullApp.mount({ role, active }).
+   StaFull app shell, StaFullApp.mount({ role, active }).
    Renders the role-aware sidebar + topbar, guards the session, wires
    in-page view switching, the live clock, the demo role switcher and the
    mobile drawer. Requires mode.js + seed.js + store.js loaded first.
@@ -71,7 +71,7 @@
     var role = opts.role;
     var active = opts.active;
 
-    /* ---- guard: real site (stafull.com) is gated — never serve the app ---- */
+    /* ---- guard: real site (stafull.com) is gated, never serve the app ---- */
     if (Mode.isReal()) { location.replace('../signin.html'); return; }
     S.setSession(role); /* demo: deep-links + role switch stay consistent */
 
@@ -111,7 +111,7 @@
           '<span class="rs-dot"></span><span class="rs-lbl">View as</span>' + I.swap + '</button>' +
           '<div class="role-menu" id="sf-rolemenu"><div class="rm-h">Switch demo role</div>' + roleMenu + '</div>' +
         '</div>' +
-        '<span class="demo-flag">Demo · sample data</span>' +
+        '<span class="demo-flag">Demo · all data is sample data</span>' +
       '</div>';
 
     /* ---- view switching ---- */

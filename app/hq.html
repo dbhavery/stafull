@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HQ Command Center — StaFull</title>
-<meta name="description" content="StaFull HQ command center demo — network performance, franchises, royalties and compliance across the holding company.">
+<title>HQ Command Center | StaFull</title>
+<meta name="description" content="StaFull HQ command center demo: network performance, franchises, royalties and compliance across the holding company.">
 <meta name="theme-color" content="#08080a">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/svg+xml" href="../logo.svg">
@@ -34,7 +34,7 @@
       <section class="view" id="view-network" data-title="Network">
         <div class="kpis" id="net-kpis"></div>
         <div class="panel">
-          <div class="panel-head"><h3>Franchises at a glance</h3><span class="ph-sub" id="net-sub">—</span></div>
+          <div class="panel-head"><h3>Franchises at a glance</h3><span class="ph-sub" id="net-sub">-</span></div>
           <div class="panel-body flush"><div class="rows" id="net-rows" style="padding:0 18px"></div></div>
         </div>
         <div class="cols cols-2-1" style="margin-top:18px">
@@ -54,7 +54,7 @@
 
       <!-- FRANCHISES -->
       <section class="view" id="view-franchises" data-title="Franchises">
-        <div class="view-head"><h2>Franchises</h2><p>Every franchise in the network, its owner and region, and the operating figures HQ watches — customers, fleet, monthly recurring revenue, royalties and compliance.</p></div>
+        <div class="view-head"><h2>Franchises</h2><p>Every franchise in the network, its owner and region, and the operating figures HQ watches: customers, fleet, monthly recurring revenue, royalties and compliance.</p></div>
         <div class="panel"><div class="panel-body flush"><table class="tbl" id="fr-tbl"></table></div></div>
       </section>
 
@@ -69,18 +69,18 @@
         <div class="panel" style="margin-top:18px">
           <div class="panel-head"><h3>How franchise economics work</h3></div>
           <div class="panel-body">
-            <p class="note">Franchisees run their own trucks, drivers and customer book; HQ provides the brand, the dispatch &amp; verification platform, and national supply agreements. In return each location remits a <b>6% royalty</b> on revenue, a <b>1% brand-fund fee</b> that pays for national marketing, and a <b>$600 per-truck monthly technology lease</b> covering the tankers' telemetry, the AI fuel-type verification, and the customer apps. The <b>Total to HQ</b> column is the sum of those three lines — the recurring, asset-light revenue the holding company collects across the network.</p>
+            <p class="note">Franchisees run their own trucks, drivers and customer book; HQ provides the brand, the dispatch platform, and national supply agreements. In return each location remits a <b>6% royalty</b> on revenue, a <b>1% brand-fund fee</b> that pays for national marketing, and a <b>$600 per-truck monthly technology lease</b> covering the tankers' telemetry and the customer apps. The <b>Total to HQ</b> column is the sum of those three lines, the recurring, asset-light revenue the holding company collects across the network.</p>
           </div>
         </div>
       </section>
 
       <!-- COMPLIANCE -->
       <section class="view" id="view-compliance" data-title="Compliance">
-        <div class="view-head"><h2>Compliance</h2><p>Network reliability and safety at a glance — platform uptime, the compliance score HQ holds every franchise to, and the open alerts the AI verification layer has raised tonight.</p></div>
+        <div class="view-head"><h2>Compliance</h2><p>Network reliability and safety at a glance: platform uptime, the compliance score HQ holds every franchise to, and the open alerts raised tonight.</p></div>
         <div class="kpis" id="comp-kpis" style="grid-template-columns:repeat(3,1fr)"></div>
         <div class="cols cols-2-1">
           <div class="panel">
-            <div class="panel-head"><h3>Open alerts</h3><span class="ph-sub" id="comp-alert-sub">—</span></div>
+            <div class="panel-head"><h3>Open alerts</h3><span class="ph-sub" id="comp-alert-sub">-</span></div>
             <div class="panel-body flush" id="comp-alerts"></div>
           </div>
           <div class="panel">
@@ -154,7 +154,7 @@
         '<div class="si"><b>' + num0(t.gallonsMTD) + '</b><span>gallons MTD</span></div>' +
         '<div class="si"><b>' + money0(t.savingsMTD) + '</b><span>saved for customers MTD</span></div>' +
       '</div>' +
-      '<p class="note" style="margin-top:18px">Customers across the network have saved <b>' + money0(t.savingsMTD) + '</b> against the local pump this month — the proof point every new franchise sells on.</p>';
+      '<p class="note" style="margin-top:18px">Customers across the network have saved <b>' + money0(t.savingsMTD) + '</b> against the local pump this month, the proof point every new franchise sells on.</p>';
   }
 
   /* ---- FRANCHISES ---- */

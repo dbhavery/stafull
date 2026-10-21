@@ -1,4 +1,4 @@
-/* StaFull marketing interactions — nav, scroll-reveal, live hero card. Vanilla, no deps. */
+/* StaFull marketing interactions, nav, scroll-reveal, live hero card. Vanilla, no deps. */
 (function () {
   // ---- mobile menu ----
   var burger = document.getElementById('burger');

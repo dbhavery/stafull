@@ -1,8 +1,8 @@
 /* ======================================================================
-   StaFull map kit — real Leaflet maps with dark (monochrome) CARTO tiles
+   StaFull map kit, real Leaflet maps with dark (monochrome) CARTO tiles
    and brand-red markers. Shared by the marketing coverage map and the
    franchise / HQ dashboards. Requires Leaflet (loaded via CDN on the page).
-   Red is used only as a marker FILL/RING — never as text.
+   Red is used only as a marker FILL/RING, never as text.
    ====================================================================== */
 (function () {
   var TILE = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';

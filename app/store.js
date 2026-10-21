@@ -1,5 +1,5 @@
 /* ======================================================================
-   StaFull — demo store. Session + role, read getters over the seed, a live
+   StaFull, demo store. Session + role, read getters over the seed, a live
    "dispensing" tick, light mutations, and a tiny pub/sub. No dependencies.
    Requires seed.js + mode.js loaded first.
    ====================================================================== */
@@ -83,7 +83,7 @@
   }
 
   /* ---------- mutations ---------- */
-  /* schedule a fill for a vehicle — adds a 'scheduled' delivery to the demo customer route view */
+  /* schedule a fill for a vehicle, adds a 'scheduled' delivery to the demo customer route view */
   function scheduleFill(vehicleId, when) {
     var v = vehicle(vehicleId); if (!v) return null;
     var gallons = Math.round(v.tankCap * (1 - v.level));
