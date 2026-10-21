@@ -1,7 +1,7 @@
 /* ======================================================================
-   StaFull app chrome — extends ../styles.css (load styles.css first).
+   StaFull app chrome, extends ../styles.css (load styles.css first).
    Dark monochrome. The only color is brand red #a30000, used as a FILL /
-   MARK / DOT only — never as text. Headings + values stay white.
+   MARK / DOT only, never as text. Headings + values stay white.
    ====================================================================== */
 
 body { overflow-x: hidden; }
@@ -152,7 +152,7 @@ body { overflow-x: hidden; }
 .pill { display: inline-flex; align-items: center; gap: 7px; font-size: .74rem; font-weight: 600; color: var(--fg-2);
   background: rgba(255,255,255,.05); border: 1px solid var(--line-2); border-radius: var(--r-pill); padding: 3px 11px; white-space: nowrap; }
 .pill .pd { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-3); flex: none; }
-/* semantic status variants — bright dot + colored text + faint tint + colored
+/* semantic status variants, bright dot + colored text + faint tint + colored
    border (readable on dark). Red is reserved for .flag (critical/held) only. */
 .pill.ok   { color: #d9f7e3; background: rgba(34,197,94,.14);  border-color: rgba(34,197,94,.5); }
 .pill.ok   .pd { background: var(--ok); }
@@ -169,11 +169,11 @@ body { overflow-x: hidden; }
 /* cyan pulse for the live/in-progress dot (no red) */
 @keyframes pillpulse { 0% { box-shadow: 0 0 0 0 rgba(6,182,212,.55); } 70% { box-shadow: 0 0 0 8px rgba(6,182,212,0); } 100% { box-shadow: 0 0 0 0 rgba(6,182,212,0); } }
 
-/* fuel tag — monochrome chip, label-distinguished */
+/* fuel tag, monochrome chip, label-distinguished */
 .ftag { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: .72rem; font-weight: 600;
   color: var(--fg-2); background: rgba(255,255,255,.04); border: 1px solid var(--line-2); padding: 2px 9px; border-radius: var(--r-pill); }
 .ftag::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--fg-3); }
-/* per-grade dot color (bright semantic) — chip bg/border stay monochrome */
+/* per-grade dot color (bright semantic), chip bg/border stay monochrome */
 .ftag-diesel::before  { background: var(--ok); }
 .ftag-regular::before { background: var(--warn); }
 .ftag-premium::before { background: var(--purple); }

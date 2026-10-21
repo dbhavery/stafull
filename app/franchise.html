@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Franchise console — StaFull</title>
-<meta name="description" content="StaFull franchise console demo — dispatch, fleet, territory, and unit P&L.">
+<title>Franchise console | StaFull</title>
+<meta name="description" content="StaFull franchise console demo: dispatch, fleet, territory, and unit P&L.">
 <meta name="theme-color" content="#08080a">
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/svg+xml" href="../logo.svg">
@@ -35,7 +35,7 @@
       <section class="view" id="view-dispatch" data-title="Dispatch">
         <div class="kpis" id="disp-kpis"></div>
         <div class="panel" style="margin-bottom:18px">
-          <div class="panel-head"><h3>Live fleet map</h3><span class="ph-sub">Dallas–Fort Worth · tankers &amp; stops, real time</span></div>
+          <div class="panel-head"><h3>Live fleet map</h3><span class="ph-sub">Dallas-Fort Worth · tankers &amp; stops, real time</span></div>
           <div class="panel-body">
             <div id="disp-map" class="sf-map" style="height:400px"></div>
             <div class="map-legend">
@@ -46,20 +46,20 @@
           </div>
         </div>
         <div class="panel" style="margin-bottom:18px">
-          <div class="panel-head"><h3>Tonight's board</h3><span class="ph-sub" id="disp-sub">—</span></div>
+          <div class="panel-head"><h3>Tonight's board</h3><span class="ph-sub" id="disp-sub">-</span></div>
           <div class="panel-body flush"><table class="tbl" id="disp-tbl"></table></div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h3>Open alerts</h3><span class="ph-sub" id="disp-alert-sub">—</span></div>
+          <div class="panel-head"><h3>Open alerts</h3><span class="ph-sub" id="disp-alert-sub">-</span></div>
           <div class="panel-body flush"><div id="disp-alerts"></div></div>
         </div>
       </section>
 
       <!-- FLEET -->
       <section class="view" id="view-fleet" data-title="Drivers & Trucks">
-        <div class="view-head"><h2>Drivers &amp; trucks</h2><p>Who's on shift tonight and where every EV tanker stands — battery, status, and what each is carrying across the four grades.</p></div>
+        <div class="view-head"><h2>Drivers &amp; trucks</h2><p>Who's on shift tonight and where every EV tanker stands: battery, status, and what each is carrying across the four grades.</p></div>
         <div class="panel" style="margin-bottom:18px">
-          <div class="panel-head"><h3>Drivers</h3><span class="ph-sub" id="drv-sub">—</span></div>
+          <div class="panel-head"><h3>Drivers</h3><span class="ph-sub" id="drv-sub">-</span></div>
           <div class="panel-body flush"><table class="tbl" id="drv-tbl"></table></div>
         </div>
         <div class="panel">
@@ -70,7 +70,7 @@
 
       <!-- TERRITORY -->
       <section class="view" id="view-territory" data-title="Territory">
-        <div class="view-head"><h2>Territory</h2><p>The Dallas–Fort Worth service area — coverage zones, active service pins tonight, and every account on the books.</p></div>
+        <div class="view-head"><h2>Territory</h2><p>The Dallas-Fort Worth service area: coverage zones, active service pins tonight, and every account on the books.</p></div>
         <div class="cols cols-2-1" style="margin-bottom:18px">
           <div class="panel">
             <div class="panel-head"><h3>Coverage map</h3><span class="ph-sub">DFW metro · accounts</span></div>
@@ -88,14 +88,14 @@
           </div>
         </div>
         <div class="panel">
-          <div class="panel-head"><h3>Accounts</h3><span class="ph-sub" id="terr-cust-sub">—</span></div>
+          <div class="panel-head"><h3>Accounts</h3><span class="ph-sub" id="terr-cust-sub">-</span></div>
           <div class="panel-body flush"><table class="tbl" id="terr-tbl"></table></div>
         </div>
       </section>
 
       <!-- P&L -->
       <section class="view" id="view-pnl" data-title="P&L">
-        <div class="view-head"><h2>Unit economics</h2><p>Month-to-date profit and loss for this franchise. Royalty, brand fee, and truck lease are the StaFull franchise model — fixed, transparent, and built into every fill.</p></div>
+        <div class="view-head"><h2>Unit economics</h2><p>Month-to-date profit and loss for this franchise. Royalty, brand fee, and truck lease are the StaFull franchise model, fixed, transparent, and built into every fill.</p></div>
         <div class="kpis" id="pnl-kpis"></div>
         <div class="panel">
           <div class="panel-head"><h3>P&amp;L statement</h3><span class="ph-sub">month-to-date</span></div>
@@ -103,7 +103,7 @@
         </div>
         <p class="muted" style="font-size:.82rem;margin-top:14px;max-width:64ch">
           Royalty (6% of revenue) and brand fee (1%) flow to StaFull HQ; truck lease is $600/mo per EV tanker.
-          These are the franchise economics — known up front, the same for every unit in the network.
+          These are the franchise economics, known up front, the same for every unit in the network.
         </p>
       </section>
 
@@ -188,12 +188,12 @@
       (ds.length ? ds.map(function (d) {
         var v = veh(d.vehicleId), c = S.customer(d.customerId), drv = S.driver(d.driverId);
         var g = d.status === 'dispensing' ? S.deliveredGallons(d) : d.gallons;
-        return '<tr><td><div class="cell-2"><b>' + drv.name + '</b><span>' + (drv.truckId || '—') + '</span></div></td>' +
+        return '<tr><td><div class="cell-2"><b>' + drv.name + '</b><span>' + (drv.truckId || '-') + '</span></div></td>' +
           '<td><div class="cell-2"><b>' + c.name + '</b><span>' + d.addr + '</span></div></td>' +
           '<td><div class="cell-2"><b>' + v.name + '</b><span class="mono" style="font-size:.74rem">' + v.plate + '</span></div></td>' +
           '<td>' + ftag(v.fuel) + '</td><td class="r num">' + g + '</td><td>' + d.window + '</td>' +
           '<td>' + statusPill(d) + '</td></tr>';
-      }).join('') : '<tr><td colspan="7" class="empty">All stops complete — night closed out.</td></tr>') + '</tbody>';
+      }).join('') : '<tr><td colspan="7" class="empty">All stops complete, night closed out.</td></tr>') + '</tbody>';
   }
   function renderDispAlerts() {
     var a = S.alerts();
@@ -212,10 +212,10 @@
     $('drv-tbl').innerHTML =
       '<thead><tr><th>Driver</th><th>Status</th><th>Truck</th><th>Route</th><th>Stops</th><th>Shift start</th></tr></thead><tbody>' +
       ds.map(function (d) {
-        var stops = d.stopsTotal ? d.stopsDone + ' / ' + d.stopsTotal : '—';
+        var stops = d.stopsTotal ? d.stopsDone + ' / ' + d.stopsTotal : '-';
         return '<tr><td><b>' + d.name + '</b></td><td>' + drvPill(d.status) + '</td>' +
-          '<td class="mono">' + (d.truckId || '—') + '</td><td>' + (d.routeId || '—') + '</td>' +
-          '<td class="num">' + stops + '</td><td class="mono">' + (d.shiftStart || '—') + '</td></tr>';
+          '<td class="mono">' + (d.truckId || '-') + '</td><td>' + (d.routeId || '-') + '</td>' +
+          '<td class="num">' + stops + '</td><td class="mono">' + (d.shiftStart || '-') + '</td></tr>';
       }).join('') + '</tbody>';
   }
   function invCell(grade, gal) {
